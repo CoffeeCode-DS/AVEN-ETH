@@ -1,0 +1,21 @@
+{
+  "name": "aven-eth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AVEN-ETH — a prototype blockchain-inspired freelance escrow platform (Simulation Mode).",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "postinstall": "npm run install:all",
+    "dev": "concurrently -n SERVER,CLIENT -c blue,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "test": "npm test --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

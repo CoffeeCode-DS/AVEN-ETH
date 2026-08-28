@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-paper text-ink-900 antialiased;
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+.font-display {
+  font-family: "Space Grotesk", sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+/* Visible keyboard focus everywhere — accessibility floor */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #3b4cff;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d7dceb;
+  border-radius: 999px;
+  border: 2px solid #f6f7fb;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c2c9dc;
+}
+
+/* Escrow flow — the app's signature motif: a small pulse that travels
+   along the connector line between two parties whenever a simulated
+   transaction is in flight or freshly confirmed. */
+.escrow-line {
+  position: relative;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #c7cdea 0,
+    #c7cdea 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+.escrow-line--active {
+  background: #3b4cff;
+}
+.escrow-pulse {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #3b4cff;
+  box-shadow: 0 0 0 4px rgba(59, 76, 255, 0.18);
+  transform: translate(-50%, -50%);
+  offset-path: path("M0,0 L100,0");
+  animation: pulseTravel 1.6s ease-in-out infinite;
+}
+
+@keyframes pulseTravel {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+/* Component classes live in @layer components so plain Tailwind
+   utilities (e.g. bg-navy-900, !border-*) placed alongside them in a
+   className always win the cascade, exactly as Tailwind intends. */
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, #eef0f6 25%, #f7f8fc 37%, #eef0f6 63%);
+    background-size: 400px 100%;
+    @apply animate-shimmer rounded-md;
+  }
+
+  .card {
+    @apply bg-surface border border-border rounded-2xl shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed select-none;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white px-4 py-2.5 hover:bg-accent-600 active:bg-accent-700 shadow-sm hover:shadow-md;
+  }
+  .btn-secondary {
+    @apply btn bg-white text-ink-800 border border-border px-4 py-2.5 hover:bg-ink-900/[0.03] active:bg-ink-900/[0.06];
+  }
+  .btn-success {
+    @apply btn bg-success text-white px-4 py-2.5 hover:bg-success-700 shadow-sm hover:shadow-md;
+  }
+  .btn-danger {
+    @apply btn bg-white text-danger-600 border border-danger-100 px-4 py-2.5 hover:bg-danger-50;
+  }
+  .btn-ghost {
+    @apply btn text-ink-500 px-3 py-2 hover:bg-ink-900/[0.04] hover:text-ink-800;
+  }
+  .btn-sm {
+    @apply !px-3 !py-1.5 text-sm;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-[15px] text-ink-900 placeholder:text-ink-300 transition-colors focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10;
+  }
+  .input-error {
+    @apply border-danger-600 focus:border-danger-600 focus:ring-danger-600/10;
+  }
+  .field-label {
+    @apply block text-sm font-medium text-ink-700 mb-1.5;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm text-danger-600;
+  }
+}

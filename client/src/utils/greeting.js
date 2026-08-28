@@ -1,0 +1,10 @@
+export function greeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+export function firstName(fullName) {
+  return fullName?.split(" ")[0] || fullName;
+}
