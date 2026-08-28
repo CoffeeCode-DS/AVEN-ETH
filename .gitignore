@@ -1,12 +1,64 @@
+# Dependencies
 node_modules/
+
+# Build / production output
 dist/
 build/
+.next/
+out/
+.output/
+.nuxt/
+.svelte-kit/
+
+# Environment variables / secrets
 .env
-.env.local
+.env.*
+!.env.example
+
+# Logs
 *.log
 npm-debug.log*
-.DS_Store
-Thumbs.db
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Cache files
+.cache/
+.parcel-cache/
+.vite/
+.vitepress/cache/
+.temp/
+.pnpm-store/
+
+# TypeScript
+*.tsbuildinfo
+
+# Package manager
+*.tgz
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+# IDE / editor
 .vscode/*
 !.vscode/extensions.json
-coverage/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.pid
+*.pid.lock
+*.seed
