@@ -82,6 +82,13 @@ class Blockchain {
     this.chain.push({ ...fields, nonce, difficulty: DIFFICULTY, hash, txId: null, status: "CONFIRMED" });
   }
 
+  loadChain(blocks) {
+    if (Array.isArray(blocks) && blocks.length > 0) {
+      this.chain = JSON.parse(JSON.stringify(blocks));
+      this.tamperedBlocks.clear();
+    }
+  }
+
   latest() {
     return this.chain[this.chain.length - 1];
   }

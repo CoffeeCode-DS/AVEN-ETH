@@ -62,3 +62,7 @@ Thumbs.db
 *.pid
 *.pid.lock
 *.seed
+
+# Local runtime database
+server/src/data/db.json
+db.json

@@ -57,11 +57,13 @@ export function loadAgreementOr404(id) {
 
 export function computeEarned(agreement) {
   if (!agreement || ["PENDING_FUNDING"].includes(agreement.status)) return 0;
-  if (agreement.status === "COMPLETED") return agreement.budget;
+  if (agreement.status === "COMPLETED") {
+    return Math.round((agreement.totalWithdrawn !== undefined && agreement.totalWithdrawn > 0 ? agreement.totalWithdrawn : agreement.budget) * 1e6) / 1e6;
+  }
 
   const rate = Number(agreement.ratePerSecond || 0);
   if (rate <= 0) {
-    return agreement.status === "COMPLETED" ? agreement.budget : (agreement.totalWithdrawn || 0);
+    return agreement.status === "COMPLETED" ? agreement.budget : Math.round((agreement.totalWithdrawn || 0) * 1e6) / 1e6;
   }
 
   // Earnings accrue strictly while worker logs active work session time
@@ -76,16 +78,26 @@ export function computeEarned(agreement) {
 
   const rawEarned = sessionSec * rate;
   const earned = Math.min(agreement.budget, Math.max(agreement.totalWithdrawn || 0, rawEarned));
-  return Math.round(earned * 10000) / 10000;
+  return Math.round(earned * 1e6) / 1e6;
 }
 
 export function computeAvailable(agreement) {
   if (!agreement) return 0;
-  if (["PENDING_FUNDING", "CANCELLED"].includes(agreement.status)) return 0;
+  if (["PENDING_FUNDING", "CANCELLED", "DISPUTED"].includes(agreement.status)) return 0;
+
   const earned = computeEarned(agreement);
   const totalWithdrawn = Number(agreement.totalWithdrawn || 0);
+
+  // During active unreviewed streaming, apply safety withdrawable cap (e.g. 75%)
+  if (agreement.status === "IN_PROGRESS") {
+    const capPercent = Number(agreement.withdrawableCapPercent) || 75;
+    const maxAllowed = (agreement.budget * capPercent) / 100;
+    const cappedEarned = Math.min(earned, maxAllowed);
+    return Math.max(0, Math.round((cappedEarned - totalWithdrawn) * 1e6) / 1e6);
+  }
+
   const available = Math.max(0, earned - totalWithdrawn);
-  return Math.round(available * 10000) / 10000;
+  return Math.round(available * 1e6) / 1e6;
 }
 
 // --- Stream Lifecycle ---
@@ -466,7 +478,7 @@ export function withdrawStreamed(agreementId, freelancerId, requestedAmount) {
 
 // --- Work Session Actions with Git Metrics ---
 
-export function workAction(agreementId, freelancerId, action) {
+export function workAction(agreementId, freelancerId, action, options = {}) {
   const agreement = loadAgreementOr404(agreementId);
   if (agreement.freelancerId !== freelancerId) throw new DomainError("This project is not assigned to you.", 403);
   if (!["IN_PROGRESS"].includes(agreement.status)) {
@@ -499,7 +511,9 @@ export function workAction(agreementId, freelancerId, action) {
     return db.workSessions.update(session.id, {
       status: "RUNNING",
       startedAt: now,
-      branch: session.branch || "feature/work-stream",
+      lastSyncAt: now,
+      branch: options?.branch || session.branch || "main",
+      baseCommit: options?.baseCommit || session.baseCommit || "0000000000000000000000000000000000000000",
     });
   }
 
@@ -511,6 +525,7 @@ export function workAction(agreementId, freelancerId, action) {
       status: "PAUSED",
       accumulatedSeconds: newAccumulated,
       startedAt: null,
+      lastSyncAt: now,
     });
   }
 
@@ -522,15 +537,19 @@ export function workAction(agreementId, freelancerId, action) {
       accumulatedSeconds += Math.max(elapsed, 0);
     }
 
-    const commitsCount = Math.max(1, Math.floor(accumulatedSeconds / 1800) + (session.commitsCount || 0));
-    const changedFilesCount = Math.max(1, Math.floor(accumulatedSeconds / 3600) + 2);
-    const linesAdded = Math.max(20, Math.floor(accumulatedSeconds / 60) * 3);
-    const linesDeleted = Math.max(5, Math.floor(linesAdded * 0.15));
+    const baseCommit = options?.baseCommit || session.baseCommit || "0000000000000000000000000000000000000000";
+    const headCommit = options?.headCommit || session.headCommit || baseCommit;
+    const commitsCount = options?.commitsCount !== undefined ? options.commitsCount : Math.max(0, session.commitsCount || 0);
+    const changedFilesCount = options?.changedFilesCount !== undefined ? options.changedFilesCount : Math.max(0, session.changedFilesCount || 0);
+    const linesAdded = options?.linesAdded !== undefined ? options.linesAdded : Math.max(0, session.linesAdded || 0);
+    const linesDeleted = options?.linesDeleted !== undefined ? options.linesDeleted : Math.max(0, session.linesDeleted || 0);
 
     const reportHash = `0x${sha256(
       JSON.stringify({
         agreementId,
         freelancerId,
+        baseCommit,
+        headCommit,
         accumulatedSeconds,
         commitsCount,
         changedFilesCount,
@@ -543,7 +562,10 @@ export function workAction(agreementId, freelancerId, action) {
     return db.workSessions.update(session.id, {
       status: "STOPPED",
       startedAt: null,
+      lastSyncAt: now,
       accumulatedSeconds,
+      baseCommit,
+      headCommit,
       commitsCount,
       changedFilesCount,
       linesAdded,
@@ -555,9 +577,100 @@ export function workAction(agreementId, freelancerId, action) {
   throw new DomainError("Unknown work session action.");
 }
 
-// --- Submission ---
+export function raiseDispute(agreementId, clientId, reason) {
+  const agreement = loadAgreementOr404(agreementId);
+  if (agreement.clientId !== clientId) throw new DomainError("Only the client can raise a dispute on this stream.", 403);
+  assertTransition(agreement.status, "DISPUTED");
 
-export function submitWork(agreementId, freelancerId, { description, deliverables, branch }) {
+  const updated = touch(agreementId, {
+    status: "DISPUTED",
+    disputeReason: (reason || "").trim() || "Client initiated emergency freeze and dispute review.",
+    disputedAt: nowIso(),
+  });
+
+  // Freeze active work session
+  const session = db.workSessions.findOne((s) => s.agreementId === agreementId);
+  if (session && session.status === "RUNNING") {
+    const elapsed = Math.floor((Date.now() - new Date(session.startedAt).getTime()) / 1000);
+    db.workSessions.update(session.id, {
+      status: "PAUSED",
+      accumulatedSeconds: (session.accumulatedSeconds || 0) + Math.max(0, elapsed),
+      startedAt: null,
+    });
+  }
+
+  const txn = recordTransaction({
+    agreementId,
+    fromUser: clientId,
+    toUser: "ESCROW_CONTRACT",
+    type: "STREAM_DISPUTED",
+    amount: 0,
+    data: { reason: reason || "Emergency Freeze" },
+  });
+
+  notify(agreement.freelancerId, {
+    type: "STREAM_DISPUTED",
+    title: "Stream Frozen by Client",
+    message: `${agreement.title}: stream has been frozen by the client for dispute review.`,
+    agreementId,
+  });
+
+  return { agreement: updated, transaction: txn };
+}
+
+export function resolveDispute(agreementId, clientId, { resolution, clientRefund, workerPayout }) {
+  const agreement = loadAgreementOr404(agreementId);
+  if (agreement.clientId !== clientId) throw new DomainError("Unauthorized.", 403);
+  if (agreement.status !== "DISPUTED") throw new DomainError("Stream is not in disputed state.");
+
+  const currentVault = Number(agreement.escrowBalance || 0);
+  const refund = Math.min(currentVault, Math.max(0, Number(clientRefund || 0)));
+  const payout = Math.min(currentVault - refund, Math.max(0, Number(workerPayout || 0)));
+
+  const client = db.users.findById(agreement.clientId);
+  const freelancer = db.users.findById(agreement.freelancerId);
+
+  if (refund > 0 && client) {
+    db.users.update(client.id, {
+      walletBalance: Math.round(((client.walletBalance || 0) + refund) * 1e6) / 1e6,
+    });
+  }
+  if (payout > 0 && freelancer) {
+    db.users.update(freelancer.id, {
+      walletBalance: Math.round(((freelancer.walletBalance || 0) + payout) * 1e6) / 1e6,
+    });
+  }
+
+  const newTotalWithdrawn = Math.round(((agreement.totalWithdrawn || 0) + payout) * 1e6) / 1e6;
+  const newEscrowBalance = Math.max(0, Math.round((currentVault - refund - payout) * 1e6) / 1e6);
+
+  const updatedStatus = resolution === "CONTINUE" ? "IN_PROGRESS" : "COMPLETED";
+  const updated = touch(agreementId, {
+    status: updatedStatus,
+    escrowBalance: newEscrowBalance,
+    totalWithdrawn: newTotalWithdrawn,
+    disputeResolvedAt: nowIso(),
+  });
+
+  return { agreement: updated };
+}
+
+export function submitWork(
+  agreementId,
+  freelancerId,
+  {
+    description,
+    deliverables,
+    branch,
+    baseCommit,
+    headCommit,
+    commitsCount,
+    changedFilesCount,
+    linesAdded,
+    linesDeleted,
+    reportHash: incomingReportHash,
+  }
+) {
   const agreement = loadAgreementOr404(agreementId);
   if (agreement.freelancerId !== freelancerId) throw new DomainError("This project is not assigned to you.", 403);
   assertTransition(agreement.status, "SUBMITTED");
@@ -574,13 +687,25 @@ export function submitWork(agreementId, freelancerId, { description, deliverable
     throw new DomainError("Stop your active work session before submitting.");
   }
 
+  const finalBaseCommit = baseCommit || session.baseCommit || "0000000000000000000000000000000000000000";
+  const finalHeadCommit = headCommit || session.headCommit || finalBaseCommit;
+  const finalCommitsCount = commitsCount !== undefined ? commitsCount : (session.commitsCount || 0);
+  const finalChangedFiles = changedFilesCount !== undefined ? changedFilesCount : (session.changedFilesCount || 0);
+  const finalLinesAdded = linesAdded !== undefined ? linesAdded : (session.linesAdded || 0);
+  const finalLinesDeleted = linesDeleted !== undefined ? linesDeleted : (session.linesDeleted || 0);
+
   const reportHash =
+    incomingReportHash ||
     session.reportHash ||
     `0x${sha256(
       JSON.stringify({
         agreementId,
         freelancerId,
-        description: description.trim(),
+        baseCommit: finalBaseCommit,
+        headCommit: finalHeadCommit,
+        commitsCount: finalCommitsCount,
+        linesAdded: finalLinesAdded,
+        linesDeleted: finalLinesDeleted,
         submittedAt: nowIso(),
       })
     )}`;
@@ -592,10 +717,12 @@ export function submitWork(agreementId, freelancerId, { description, deliverable
       description: description.trim(),
       deliverables: deliverables && deliverables.length ? deliverables : existing.deliverables,
       branch: branch || session.branch || "main",
-      commitsCount: session.commitsCount || 1,
-      changedFilesCount: session.changedFilesCount || 1,
-      linesAdded: session.linesAdded || 50,
-      linesDeleted: session.linesDeleted || 10,
+      baseCommit: finalBaseCommit,
+      headCommit: finalHeadCommit,
+      commitsCount: finalCommitsCount,
+      changedFilesCount: finalChangedFiles,
+      linesAdded: finalLinesAdded,
+      linesDeleted: finalLinesDeleted,
       reportHash,
       submittedAt: nowIso(),
       status: "PENDING_REVIEW",
@@ -609,10 +736,12 @@ export function submitWork(agreementId, freelancerId, { description, deliverable
       description: description.trim(),
       deliverables: deliverables && deliverables.length ? deliverables : ["deliverables.zip"],
       branch: branch || session.branch || "main",
-      commitsCount: session.commitsCount || 1,
-      changedFilesCount: session.changedFilesCount || 1,
-      linesAdded: session.linesAdded || 50,
-      linesDeleted: session.linesDeleted || 10,
+      baseCommit: finalBaseCommit,
+      headCommit: finalHeadCommit,
+      commitsCount: finalCommitsCount,
+      changedFilesCount: finalChangedFiles,
+      linesAdded: finalLinesAdded,
+      linesDeleted: finalLinesDeleted,
       reportHash,
       submittedAt: nowIso(),
       status: "PENDING_REVIEW",

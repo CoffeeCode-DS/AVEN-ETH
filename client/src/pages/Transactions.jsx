@@ -7,10 +7,10 @@ import EmptyState from "../components/EmptyState.jsx";
 import LoadingGrid from "../components/LoadingSkeleton.jsx";
 
 const FILTERS = [
-  { key: "ALL", label: "All" },
-  { key: "ESCROW", label: "Escrow", types: ["ESCROW_FUNDED"] },
-  { key: "PAYMENTS", label: "Payments", types: ["PAYMENT_RELEASED"] },
-  { key: "WORK", label: "Work", types: ["WORK_SUBMITTED", "REVISION_REQUESTED"] },
+  { key: "ALL", label: "All Events" },
+  { key: "ESCROW", label: "Escrow Deposits", types: ["ESCROW_FUNDED", "WALLET_DEPOSIT"] },
+  { key: "PAYMENTS", label: "Streams & Releases", types: ["PAYMENT_RELEASED", "STREAM_CLAIMED", "WALLET_TRANSFER"] },
+  { key: "WORK", label: "Work Proofs", types: ["WORK_SUBMITTED", "REVISION_REQUESTED"] },
   { key: "COMPLETED", label: "Completed", types: ["PROJECT_COMPLETED"] },
 ];
 
@@ -35,14 +35,14 @@ export default function Transactions() {
   }, [transactions, filter]);
 
   return (
-    <AppLayout title="Transactions" subtitle="Every simulated on-chain event across your projects.">
-      <div className="flex items-center gap-1.5 bg-ink-900/[0.04] rounded-xl p-1 mb-6 w-fit overflow-x-auto max-w-full">
+    <AppLayout title="Transactions" subtitle="Every simulated on-chain event across your payment streams and escrow vaults.">
+      <div className="flex items-center gap-1.5 bg-[#0A0A0A] border border-white/[0.08] rounded-xl p-1 mb-6 w-fit overflow-x-auto max-w-full shadow-lg">
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-              filter === f.key ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors whitespace-nowrap ${
+              filter === f.key ? "bg-[#6366F1] text-white shadow-sm" : "text-slate-400 hover:text-white"
             }`}
           >
             {f.label}
@@ -51,7 +51,7 @@ export default function Transactions() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-danger-50 border border-danger-100 px-4 py-3 text-sm text-danger-700 mb-6">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400 mb-6">
           {error}
         </div>
       )}
@@ -59,8 +59,8 @@ export default function Transactions() {
       {!transactions && !error && <LoadingGrid count={4} />}
 
       {transactions && filtered.length === 0 && (
-        <div className="card">
-          <EmptyState title="No transactions yet" message="Simulated transactions will appear here as your agreements progress." />
+        <div className="p-12 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
+          <EmptyState title="No transactions yet" message="Simulated transactions will appear here as your agreements and streams progress." />
         </div>
       )}
 

@@ -38,7 +38,6 @@ export default function WorkSession() {
         if (res.agreement?.session?.branch) {
           setBranch(res.agreement.session.branch);
         }
-        // Auto-detect general work if category is not Freelance web dev
         if (["Grant", "Bounty", "Subscription", "AgentTask"].includes(res.agreement?.category)) {
           setWorkMode("GENERAL");
         }
@@ -141,7 +140,7 @@ export default function WorkSession() {
   if (error) {
     return (
       <AppLayout title="Work Session">
-        <div className="rounded-xl bg-danger-50 border border-danger-100 px-4 py-3 text-sm text-danger-700">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400">
           {error}
         </div>
       </AppLayout>
@@ -151,7 +150,7 @@ export default function WorkSession() {
   if (!agreement) {
     return (
       <AppLayout title="Work Session">
-        <div className="skeleton h-64 w-full" />
+        <div className="skeleton h-64 w-full rounded-2xl" />
       </AppLayout>
     );
   }
@@ -159,12 +158,12 @@ export default function WorkSession() {
   if (!["IN_PROGRESS", "PAUSED"].includes(agreement.status)) {
     return (
       <AppLayout title={agreement.title}>
-        <div className="card p-8 text-center max-w-md mx-auto mt-10">
+        <div className="p-8 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] text-center max-w-md mx-auto mt-10 shadow-xl">
           <StatusBadge status={agreement.status} className="mb-3" />
-          <h2 className="font-display text-lg font-semibold text-ink-900">
+          <h2 className="text-base font-medium text-white mb-2">
             Work sessions are only available while a stream is in progress.
           </h2>
-          <Link to={`/agreements/${agreement.id}`} className="btn-primary mt-5 inline-flex">
+          <Link to={`/agreements/${agreement.id}`} className="btn-primary mt-5 inline-flex font-mono text-xs">
             View Stream
           </Link>
         </div>
@@ -186,80 +185,80 @@ export default function WorkSession() {
   const linesAdded = Math.max(25, Math.floor(liveSeconds / 60) * 3);
   const linesDeleted = Math.max(4, Math.floor(linesAdded * 0.15));
 
-  // General non-code metrics (e.g. data records, wireframe sheets)
+  // General non-code metrics
   const itemsCompleted = Math.max(12, Math.floor(liveSeconds / 30));
 
   return (
     <AppLayout title={agreement.title} subtitle={`Client: ${agreement.client?.name} • Category: ${agreement.category}`}>
-      <Link to={`/agreements/${agreement.id}`} className="text-sm text-ink-400 hover:text-ink-700 mb-5 inline-flex items-center gap-1">
+      <Link to={`/agreements/${agreement.id}`} className="text-xs font-mono text-slate-400 hover:text-white mb-5 inline-flex items-center gap-1 transition-colors">
         &larr; Back to stream
       </Link>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {isRevision && (
-            <div className="rounded-xl bg-warning-50 border border-warning-100 px-4 py-3.5">
-              <p className="text-xs font-semibold text-warning-700 uppercase tracking-wide mb-1">
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3.5 font-sans">
+              <p className="text-xs font-mono font-semibold text-amber-300 uppercase tracking-wide mb-1">
                 Revision requested
               </p>
-              <p className="text-sm text-ink-700">{agreement.submission.clientFeedback}</p>
+              <p className="text-xs text-slate-300">{agreement.submission.clientFeedback}</p>
             </div>
           )}
 
           {/* Terminal CLI Command Box */}
-          <div className="card p-4 bg-slate-900 border-slate-800 text-white space-y-2">
-            <div className="flex items-center justify-between text-xs text-white/60">
+          <div className="p-4 rounded-2xl bg-[#050505] border border-white/[0.08] text-white space-y-2 shadow-xl">
+            <div className="flex items-center justify-between text-xs font-mono text-slate-400">
               <span className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                AVEN-ETH Session Watcher CLI
+                AVEN Session Watcher CLI
               </span>
               <button
                 type="button"
                 onClick={copyCliCommand}
-                className="text-accent-400 hover:text-white font-mono transition-colors font-semibold"
+                className="text-[#818CF8] hover:text-white font-mono transition-colors font-semibold"
               >
-                {copiedCli ? "✓ Command Copied!" : "📋 Copy CLI Command"}
+                {copiedCli ? "✓ Command Copied!" : "Copy CLI Command"}
               </button>
             </div>
-            <div className="bg-black/50 p-3 rounded-lg font-mono text-xs text-emerald-400 flex items-center justify-between overflow-x-auto">
+            <div className="bg-black/50 p-3 rounded-xl font-mono text-xs text-emerald-400 flex items-center justify-between border border-white/[0.05] overflow-x-auto">
               <code>aven-eth watch --stream {agreement.id}</code>
             </div>
           </div>
 
           {/* Work Mode Switcher */}
-          <div className="flex items-center gap-2 p-1.5 bg-ink-900/[0.04] rounded-xl border border-border-soft">
+          <div className="flex items-center gap-2 p-1.5 bg-[#0A0A0A] rounded-xl border border-white/[0.08] shadow-lg font-mono">
             <button
               type="button"
               onClick={() => setWorkMode("CODE")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                 workMode === "CODE"
-                  ? "bg-navy-900 text-white shadow-sm"
-                  : "text-ink-600 hover:text-ink-900"
+                  ? "bg-[#6366F1] text-white shadow-sm"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
-              💻 Coding &amp; Git Repository Mode
+              Coding &amp; Git Merkle Mode
             </button>
             <button
               type="button"
               onClick={() => setWorkMode("GENERAL")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
                 workMode === "GENERAL"
-                  ? "bg-navy-900 text-white shadow-sm"
-                  : "text-ink-600 hover:text-ink-900"
+                  ? "bg-[#6366F1] text-white shadow-sm"
+                  : "text-slate-400 hover:text-white"
               }`}
             >
-              📄 General Work / Non-Code Mode (Data Entry, Design, Writing)
+              Milestone / Non-Code Mode
             </button>
           </div>
 
           {/* Timer card */}
-          <div className="card p-8 bg-navy-900 !border-navy-800 text-center relative overflow-hidden">
-            <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+          <div className="p-8 rounded-2xl bg-gradient-to-br from-[#141414] to-[#0A0A0A] border border-white/[0.08] text-center relative overflow-hidden shadow-2xl">
+            <div className="absolute -top-20 -left-20 h-64 w-64 rounded-full bg-[#6366F1]/15 blur-3xl pointer-events-none" />
             <div className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
 
-            <p className="relative text-xs font-semibold tracking-widest text-accent-400 uppercase mb-4">
+            <p className="relative text-xs font-mono font-semibold tracking-widest text-[#818CF8] uppercase mb-4">
               {status === "RUNNING"
-                ? `⚡ ${workMode === "CODE" ? "Git Proof Tracking Active" : "General Work Session Active"}`
+                ? `${workMode === "CODE" ? "Git Proof Tracking Active" : "Work Session Active"}`
                 : status === "PAUSED"
                 ? "Session Paused"
                 : status === "STOPPED"
@@ -267,38 +266,38 @@ export default function WorkSession() {
                 : "Standby"}
             </p>
 
-            <p className="relative font-tabular text-5xl sm:text-6xl font-bold text-white tracking-tight">
+            <p className="relative font-mono text-5xl sm:text-6xl font-bold text-white tracking-tight">
               {formatDuration(liveSeconds)}
             </p>
 
-            <div className="relative flex items-center justify-center gap-4 text-xs text-white/60 mt-3 font-tabular">
+            <div className="relative flex items-center justify-center gap-4 text-xs text-slate-400 mt-3 font-mono">
               <span>Earned this session: <strong className="text-emerald-400">{formatEth(liveEarnedThisSession)}</strong></span>
               <span>&middot;</span>
-              <span>Rate: <strong className="text-white/80">{formatEth(ratePerSec * 3600)}/hr</strong></span>
+              <span>Rate: <strong className="text-slate-200">{formatEth(ratePerSec * 3600)}/hr</strong></span>
             </div>
 
-            <div className="relative flex items-center justify-center gap-3 mt-7 flex-wrap">
+            <div className="relative flex items-center justify-center gap-3 mt-7 flex-wrap font-mono">
               {(status === "IDLE" || status === "STOPPED") && (
-                <button className="btn-primary" onClick={() => runAction("start")} disabled={busy}>
+                <button className="h-10 px-6 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-medium uppercase tracking-wider transition-all shadow-md shadow-indigo-500/25" onClick={() => runAction("start")} disabled={busy}>
                   {status === "STOPPED" ? "Log More Time" : "Start Tracking Work"}
                 </button>
               )}
               {status === "PAUSED" && (
                 <>
-                  <button className="btn-primary" onClick={() => runAction("resume")} disabled={busy}>
+                  <button className="h-10 px-6 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white text-xs font-medium uppercase tracking-wider transition-all shadow-md shadow-indigo-500/25" onClick={() => runAction("resume")} disabled={busy}>
                     Resume Session
                   </button>
-                  <button className="btn-secondary !bg-transparent !text-white !border-white/20 hover:!bg-white/10" onClick={() => runAction("stop")} disabled={busy}>
+                  <button className="h-10 px-5 rounded-xl bg-[#171717] text-slate-300 border border-white/[0.08] hover:bg-[#1F1F1F] hover:text-white text-xs font-medium uppercase transition-all" onClick={() => runAction("stop")} disabled={busy}>
                     Stop Session &amp; Generate Proof
                   </button>
                 </>
               )}
               {status === "RUNNING" && (
                 <>
-                  <button className="btn-secondary !bg-transparent !text-white !border-white/20 hover:!bg-white/10" onClick={() => runAction("pause")} disabled={busy}>
+                  <button className="h-10 px-5 rounded-xl bg-[#171717] text-slate-300 border border-white/[0.08] hover:bg-[#1F1F1F] hover:text-white text-xs font-medium uppercase transition-all" onClick={() => runAction("pause")} disabled={busy}>
                     Pause
                   </button>
-                  <button className="btn-danger !bg-danger-600 !text-white !border-danger-600 hover:!bg-danger-700" onClick={() => runAction("stop")} disabled={busy}>
+                  <button className="h-10 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-medium uppercase tracking-wider transition-all shadow-md" onClick={() => runAction("stop")} disabled={busy}>
                     Stop &amp; Generate Proof
                   </button>
                 </>
@@ -308,94 +307,94 @@ export default function WorkSession() {
 
           {/* Proof of Work Activity Card */}
           {workMode === "CODE" ? (
-            <div className="card p-6 space-y-4">
+            <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4 font-mono">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                   Cryptographic Git Proof Tracking
                 </p>
-                <span className="text-xs bg-accent-50 text-accent-700 px-2 py-0.5 rounded font-semibold border border-accent-100">
+                <span className="text-[10px] bg-[#6366F1]/15 text-[#818CF8] px-2 py-0.5 rounded border border-indigo-500/30">
                   Privacy Protected (.avenignore)
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Active Git Branch</span>
-                  <span className="font-mono text-xs font-semibold text-ink-800 truncate block">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1 text-xs">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Git Branch</span>
+                  <span className="font-semibold text-white truncate block">
                     {branch}
                   </span>
                 </div>
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Commits Recorded</span>
-                  <span className="font-tabular font-bold text-sm text-ink-900">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Commits Recorded</span>
+                  <span className="font-bold text-white text-sm">
                     {commitsCount}
                   </span>
                 </div>
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Files Changed</span>
-                  <span className="font-tabular font-bold text-sm text-ink-900">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Files Changed</span>
+                  <span className="font-bold text-white text-sm">
                     {changedFilesCount}
                   </span>
                 </div>
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Line Diffs</span>
-                  <span className="font-tabular font-semibold text-xs text-emerald-600">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Line Diffs</span>
+                  <span className="font-semibold text-emerald-400">
                     +{linesAdded}
                   </span>{" "}
                   /{" "}
-                  <span className="font-tabular font-semibold text-xs text-danger-600">
+                  <span className="font-semibold text-rose-400">
                     -{linesDeleted}
                   </span>
                 </div>
               </div>
 
               {session?.reportHash && (
-                <div className="p-3 bg-slate-900 rounded-xl text-xs font-mono text-white/80 space-y-1">
-                  <p className="text-[10px] uppercase text-accent-400 font-semibold tracking-wider">
+                <div className="p-3 bg-[#050505] rounded-xl text-xs text-slate-300 border border-white/[0.06] space-y-1">
+                  <p className="text-[10px] uppercase text-[#818CF8] font-semibold tracking-wider">
                     Mined Git Session SHA-256 Hash:
                   </p>
-                  <p className="text-white break-all">{session.reportHash}</p>
+                  <p className="text-slate-300 break-all">{session.reportHash}</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="card p-6 space-y-4">
+            <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4 font-mono">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                   Milestone &amp; Non-Code Deliverable Tracking
                 </p>
-                <span className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-semibold border border-emerald-100">
+                <span className="text-[10px] bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/30">
                   Data Entry / Design / Research
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Task Category</span>
-                  <span className="font-semibold text-xs text-ink-800">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1 text-xs">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Task Category</span>
+                  <span className="font-semibold text-white">
                     {agreement.category || "General Work"}
                   </span>
                 </div>
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Items Processed</span>
-                  <span className="font-tabular font-bold text-sm text-ink-900">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Items Processed</span>
+                  <span className="font-bold text-white text-sm">
                     {itemsCompleted} items
                   </span>
                 </div>
-                <div className="p-3 bg-ink-900/[0.02] rounded-xl border border-border-soft">
-                  <span className="text-[11px] text-ink-400 block mb-1">Active Duration</span>
-                  <span className="font-tabular font-bold text-sm text-emerald-600">
+                <div className="p-3 bg-[#141414] rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 block mb-1">Active Duration</span>
+                  <span className="font-bold text-emerald-400 text-sm">
                     {formatDuration(liveSeconds)}
                   </span>
                 </div>
               </div>
 
               {session?.reportHash && (
-                <div className="p-3 bg-slate-900 rounded-xl text-xs font-mono text-white/80 space-y-1">
+                <div className="p-3 bg-[#050505] rounded-xl text-xs text-slate-300 border border-white/[0.06] space-y-1">
                   <p className="text-[10px] uppercase text-emerald-400 font-semibold tracking-wider">
                     Mined Deliverable Integrity SHA-256 Hash:
                   </p>
-                  <p className="text-white break-all">{session.reportHash}</p>
+                  <p className="text-slate-300 break-all">{session.reportHash}</p>
                 </div>
               )}
             </div>
@@ -403,11 +402,11 @@ export default function WorkSession() {
 
           {/* Submission form */}
           {showSubmissionForm && (
-            <div className="card p-6 animate-fadeUp space-y-4">
-              <p className="text-xs font-medium text-ink-400 uppercase tracking-wide">
+            <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">
                 {isRevision ? "Resubmit Verified Work" : "Submit Work for Client Review & Attestation"}
               </p>
-              <div className="space-y-4">
+              <div className="space-y-4 font-mono text-xs">
                 {workMode === "CODE" ? (
                   <div>
                     <label className="field-label">Git Branch</label>
@@ -435,7 +434,7 @@ export default function WorkSession() {
                   <label className="field-label">Work Summary &amp; Milestone Notes</label>
                   <textarea
                     rows={4}
-                    className={`input resize-none ${submitError ? "input-error" : ""}`}
+                    className={`input resize-none font-sans ${submitError ? "input-error" : ""}`}
                     placeholder={
                       workMode === "CODE"
                         ? "Summarize what you implemented, commits made, and architectural notes..."
@@ -460,7 +459,11 @@ export default function WorkSession() {
                 </div>
 
                 {submitError && <p className="field-error !mt-0">{submitError}</p>}
-                <button className="btn-primary w-full" onClick={handleSubmit} disabled={submitting}>
+                <button
+                  className="h-10 px-5 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-mono text-xs font-semibold uppercase tracking-wider transition-all shadow-md shadow-indigo-500/25 w-full flex items-center justify-center gap-2"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                >
                   {submitting && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin mr-2" />}
                   {submitting ? "Submitting Proof..." : "Submit for Client Review"}
                 </button>
@@ -471,28 +474,28 @@ export default function WorkSession() {
 
         {/* Right column: Stream details & on-demand claim */}
         <div className="space-y-6">
-          <div className="card p-5 space-y-4">
-            <p className="text-xs font-medium text-ink-400 uppercase tracking-wide">Stream Escrow Details</p>
-            <dl className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-ink-400">Client</dt>
-                <dd className="font-medium text-ink-800">{agreement.client?.name}</dd>
+          <div className="p-5 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4 font-mono text-xs">
+            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Stream Vault Details</p>
+            <dl className="space-y-3">
+              <div className="flex justify-between pb-2 border-b border-white/[0.06]">
+                <dt className="text-slate-400">Client</dt>
+                <dd className="font-medium text-white">{agreement.client?.name}</dd>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-white/[0.06]">
+                <dt className="text-slate-400">Category</dt>
+                <dd className="font-medium text-[#818CF8]">{agreement.category}</dd>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-white/[0.06]">
+                <dt className="text-slate-400">Total Stream Budget</dt>
+                <dd className="font-medium text-white">{formatEth(agreement.budget)}</dd>
+              </div>
+              <div className="flex justify-between pb-2 border-b border-white/[0.06]">
+                <dt className="text-slate-400">Remaining in Vault</dt>
+                <dd className="font-medium text-white">{formatEth(agreement.escrowBalance)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-ink-400">Category</dt>
-                <dd className="font-medium text-accent">{agreement.category}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-400">Total Stream Budget</dt>
-                <dd className="font-tabular font-medium text-ink-800">{formatEth(agreement.budget)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-400">Remaining in Vault</dt>
-                <dd className="font-tabular font-medium text-ink-800">{formatEth(agreement.escrowBalance)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-ink-400">Claimable Available</dt>
-                <dd className="font-tabular font-bold text-emerald-600">{formatEth(availableToClaim)}</dd>
+                <dt className="text-slate-400">Claimable Available</dt>
+                <dd className="font-bold text-emerald-400">{formatEth(availableToClaim)}</dd>
               </div>
             </dl>
 
@@ -500,7 +503,7 @@ export default function WorkSession() {
               <button
                 onClick={handleClaimStream}
                 disabled={claiming}
-                className="btn-success w-full text-xs font-semibold py-2.5"
+                className="h-10 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-mono text-xs font-semibold uppercase tracking-wide transition-all shadow-md shadow-emerald-500/20 w-full"
               >
                 {claiming ? "Mining Claim Tx..." : `Claim ${formatEth(availableToClaim)} Now`}
               </button>

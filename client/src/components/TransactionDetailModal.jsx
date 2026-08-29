@@ -6,17 +6,17 @@ import { formatEth, formatDateTime, truncateAddress } from "../utils/format.js";
 function Disclosure({ title, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-t border-border-soft first:border-t-0">
+    <div className="border-t border-white/[0.06] first:border-t-0">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between py-3.5 text-left"
         aria-expanded={open}
       >
-        <span className="text-xs font-semibold text-ink-400 uppercase tracking-wide">{title}</span>
+        <span className="text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider">{title}</span>
         <svg
           viewBox="0 0 20 20"
           fill="none"
-          className={`h-4 w-4 text-ink-300 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`h-4 w-4 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
         >
           <path d="M5 7.5 10 12.5 15 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -28,9 +28,9 @@ function Disclosure({ title, defaultOpen = true, children }) {
 
 function Row({ label, value, mono }) {
   return (
-    <div className="flex items-center justify-between py-1.5 text-sm gap-4">
-      <span className="text-ink-400 shrink-0">{label}</span>
-      <span className={`text-ink-800 font-medium text-right break-all ${mono ? "font-tabular" : ""}`}>{value}</span>
+    <div className="flex items-center justify-between py-1.5 text-xs font-mono gap-4">
+      <span className="text-slate-400 shrink-0">{label}</span>
+      <span className={`text-slate-200 font-medium text-right break-all ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -41,6 +41,10 @@ const TYPE_LABELS = {
   REVISION_REQUESTED: "Revision Requested",
   PAYMENT_RELEASED: "Payment Released",
   PROJECT_COMPLETED: "Project Completed",
+  WALLET_DEPOSIT: "Wallet Deposit",
+  WALLET_TRANSFER: "Wallet Transfer",
+  STREAM_CLAIMED: "Stream Claim",
+  DISPUTE_RAISED: "Dispute Freeze",
 };
 
 export default function TransactionDetailModal({ txn, open, onClose }) {
@@ -63,8 +67,8 @@ export default function TransactionDetailModal({ txn, open, onClose }) {
       </Disclosure>
 
       <Disclosure title="Participants" defaultOpen>
-        <Row label="From" value={txn.fromName} />
-        <Row label="To" value={txn.toName} />
+        <Row label="From" value={txn.fromName || truncateAddress(txn.from)} />
+        <Row label="To" value={txn.toName || truncateAddress(txn.to)} />
         <Row label="Escrow Contract" value="AVEN-ETH Stream Vault (0x3F2bA7e91)" mono />
       </Disclosure>
 
@@ -81,12 +85,12 @@ export default function TransactionDetailModal({ txn, open, onClose }) {
       <Disclosure title="Timeline" defaultOpen={false}>
         <div className="space-y-3 mt-1">
           {timelineSteps.map((step) => (
-            <div key={step} className="flex items-center gap-3">
-              <span className="h-4 w-4 rounded-full bg-success text-white flex items-center justify-center text-[10px] shrink-0">
-                &#10003;
+            <div key={step} className="flex items-center gap-3 text-xs font-mono">
+              <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] shrink-0 border border-emerald-500/30">
+                ✓
               </span>
-              <span className="text-sm text-ink-700 flex-1">{step}</span>
-              <span className="text-xs text-ink-300">{formatDateTime(txn.timestamp)}</span>
+              <span className="text-slate-300 flex-1">{step}</span>
+              <span className="text-slate-500">{formatDateTime(txn.timestamp)}</span>
             </div>
           ))}
         </div>

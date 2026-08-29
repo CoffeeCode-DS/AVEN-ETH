@@ -49,6 +49,7 @@ async function request(path, { method = "GET", body } = {}) {
 
 export const api = {
   login: (email, password) => request("/auth/login", { method: "POST", body: { email, password } }),
+  register: (payload) => request("/auth/register", { method: "POST", body: payload }),
   me: () => request("/auth/me"),
 
   freelancers: () => request("/users/freelancers"),
@@ -70,6 +71,8 @@ export const api = {
   requestRevision: (id, feedback) =>
     request(`/agreements/${id}/revision`, { method: "POST", body: { feedback } }),
   reject: (id, reason) => request(`/agreements/${id}/reject`, { method: "POST", body: { reason } }),
+  dispute: (id, reason) => request(`/agreements/${id}/dispute`, { method: "POST", body: { reason } }),
+  resolveDispute: (id, payload) => request(`/agreements/${id}/dispute/resolve`, { method: "POST", body: payload }),
 
   reputation: (userId) => request(`/reputation${userId ? `/${userId}` : ""}`),
   attestations: (params) => {

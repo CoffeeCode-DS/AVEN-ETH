@@ -1,21 +1,25 @@
+import React from "react";
+
 export default function StatCard({ label, value, hint, tone = "default", icon }) {
   const toneClass =
     tone === "success"
-      ? "text-success-700"
+      ? "text-emerald-400"
       : tone === "warning"
-      ? "text-warning-700"
+      ? "text-amber-400"
       : tone === "accent"
-      ? "text-accent-700"
-      : "text-ink-900";
+      ? "text-[#818CF8]"
+      : tone === "danger"
+      ? "text-rose-400"
+      : "text-white";
 
   return (
-    <div className="card p-5">
+    <div className="p-5 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl hover:border-white/[0.15] transition-all">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-ink-400 uppercase tracking-wide">{label}</p>
-        {icon && <span className="text-ink-300">{icon}</span>}
+        <p className="text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider">{label}</p>
+        {icon && <span className="text-slate-500">{icon}</span>}
       </div>
-      <p className={`font-display font-tabular text-2xl font-semibold mt-2 ${toneClass}`}>{value}</p>
-      {hint && <p className="text-xs text-ink-400 mt-1">{hint}</p>}
+      <p className={`font-mono text-2xl font-bold mt-2 ${toneClass}`}>{value}</p>
+      {hint && <p className="text-xs text-slate-400 mt-1 font-sans">{hint}</p>}
     </div>
   );
 }
