@@ -8,8 +8,8 @@ import EmptyState from "../components/EmptyState.jsx";
 import LoadingGrid from "../components/LoadingSkeleton.jsx";
 
 const FILTERS = [
-  { key: "ALL", label: "All" },
-  { key: "ACTIVE", label: "Active" },
+  { key: "ALL", label: "All Streams" },
+  { key: "ACTIVE", label: "Active & Streaming" },
   { key: "SUBMITTED", label: "Awaiting Review" },
   { key: "COMPLETED", label: "Completed" },
 ];
@@ -40,17 +40,17 @@ export default function Agreements() {
 
   return (
     <AppLayout
-      title={isClient ? "Agreements" : "Projects"}
-      subtitle={isClient ? "Every agreement you've created, funded, or completed." : "Every project you've been assigned."}
+      title={isClient ? "Payment Streams & Agreements" : "My Payment Streams"}
+      subtitle={isClient ? "Every agreement you've created, funded, or streamed." : "Every project payment stream assigned to you."}
     >
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-        <div className="flex items-center gap-1.5 bg-ink-900/[0.04] rounded-xl p-1">
+        <div className="flex items-center gap-1.5 bg-[#0A0A0A] border border-white/[0.08] rounded-xl p-1 shadow-lg">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
-              className={`px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                filter === f.key ? "bg-white text-ink-900 shadow-sm" : "text-ink-500 hover:text-ink-800"
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors whitespace-nowrap ${
+                filter === f.key ? "bg-[#6366F1] text-white shadow-sm" : "text-slate-400 hover:text-white"
               }`}
             >
               {f.label}
@@ -58,7 +58,10 @@ export default function Agreements() {
           ))}
         </div>
         {isClient && (
-          <Link to="/agreements/new" className="btn-primary">
+          <Link
+            to="/agreements/new"
+            className="h-10 px-4 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-medium text-xs font-mono tracking-wider uppercase transition-all shadow-md shadow-indigo-500/25 flex items-center gap-2"
+          >
             <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4">
               <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
@@ -68,7 +71,7 @@ export default function Agreements() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-danger-50 border border-danger-100 px-4 py-3 text-sm text-danger-700 mb-6">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400 mb-6">
           {error}
         </div>
       )}
@@ -76,7 +79,7 @@ export default function Agreements() {
       {!agreements && !error && <LoadingGrid count={6} />}
 
       {agreements && filtered.length === 0 && (
-        <div className="card">
+        <div className="p-12 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
           <EmptyState
             title="Nothing here yet"
             message={

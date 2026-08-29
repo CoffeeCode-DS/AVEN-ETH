@@ -15,23 +15,24 @@ const CONFIG = {
   STOPPED: { label: "Stopped", tone: "neutral" },
   IDLE: { label: "Not Started", tone: "neutral" },
   CONFIRMED: { label: "Confirmed", tone: "success" },
+  DISPUTED: { label: "Disputed Freeze", tone: "danger" },
 };
 
 const TONE_CLASSES = {
-  warning: "bg-warning-50 text-warning-700 ring-1 ring-inset ring-warning-100",
-  accent: "bg-accent-50 text-accent-700 ring-1 ring-inset ring-accent-100",
-  success: "bg-success-50 text-success-700 ring-1 ring-inset ring-success-100",
-  danger: "bg-danger-50 text-danger-700 ring-1 ring-inset ring-danger-100",
-  neutral: "bg-ink-900/5 text-ink-500 ring-1 ring-inset ring-ink-900/10",
+  warning: "bg-amber-500/15 text-amber-300 ring-1 ring-inset ring-amber-500/30",
+  accent: "bg-[#6366F1]/15 text-[#818CF8] ring-1 ring-inset ring-indigo-500/30",
+  success: "bg-emerald-500/15 text-emerald-300 ring-1 ring-inset ring-emerald-500/30",
+  danger: "bg-rose-500/15 text-rose-300 ring-1 ring-inset ring-rose-500/30",
+  neutral: "bg-white/[0.08] text-slate-300 ring-1 ring-inset ring-white/[0.12]",
 };
 
 export default function StatusBadge({ status, className = "" }) {
   const conf = CONFIG[status] || { label: status?.replace(/_/g, " ") || "Unknown", tone: "neutral" };
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold tracking-wide ${TONE_CLASSES[conf.tone]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-mono font-medium tracking-wide ${TONE_CLASSES[conf.tone]} ${className}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+      <span className="h-1.5 w-1.5 rounded-full bg-current opacity-80" />
       {conf.label}
     </span>
   );

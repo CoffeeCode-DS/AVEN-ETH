@@ -22,21 +22,21 @@ export default function AppLayout({ title, subtitle, children }) {
   }, [drawerOpen]);
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="flex min-h-screen bg-[#000000] text-[#F1F5F9] font-sans antialiased selection:bg-[#6366F1] selection:text-white">
       <Sidebar />
 
       {drawerOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-navy-950/50" onClick={() => setDrawerOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-[260px] bg-navy-900 animate-fadeUp">
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setDrawerOpen(false)} />
+          <div className="absolute left-0 top-0 h-full w-[260px] bg-[#000000] border-r border-white/[0.08] animate-fadeUp z-10">
             <SidebarContent onNavigate={() => setDrawerOpen(false)} />
           </div>
         </div>
       )}
 
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 flex flex-col bg-[#000000]">
         <Topbar title={title} subtitle={subtitle} onMenuClick={() => setDrawerOpen(true)} />
-        <main className="px-4 sm:px-8 py-7 max-w-[1200px] mx-auto">{children}</main>
+        <main className="flex-1 px-4 sm:px-8 py-8 max-w-7xl mx-auto w-full">{children}</main>
       </div>
     </div>
   );

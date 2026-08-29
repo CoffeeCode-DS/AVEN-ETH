@@ -5,15 +5,15 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api/client.js";
 import { useToast } from "../context/ToastContext.jsx";
 import Modal from "../components/Modal.jsx";
-import { formatEth, formatDate, formatDateTime, truncateAddress } from "../utils/format.js";
+import { formatEth, formatDateTime, truncateAddress } from "../utils/format.js";
 
 const TX_BADGES = {
-  WALLET_DEPOSIT: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  WALLET_TRANSFER: "bg-purple-50 text-purple-700 border-purple-100",
-  STREAM_CREATED: "bg-sky-50 text-sky-700 border-sky-100",
-  STREAM_CLAIMED: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  ATTESTATION_MINTED: "bg-amber-50 text-amber-700 border-amber-100",
-  STREAM_CANCELLED: "bg-danger-50 text-danger-700 border-danger-100",
+  WALLET_DEPOSIT: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  WALLET_TRANSFER: "bg-[#6366F1]/15 text-[#818CF8] border-indigo-500/30",
+  STREAM_CREATED: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  STREAM_CLAIMED: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  ATTESTATION_MINTED: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+  STREAM_CANCELLED: "bg-rose-500/15 text-rose-300 border-rose-500/30",
 };
 
 export default function Wallet() {
@@ -108,8 +108,8 @@ export default function Wallet() {
     return (
       <AppLayout title="Wallet & Liquidity Hub" subtitle="Loading your balances...">
         <div className="space-y-6">
-          <div className="skeleton h-60 w-full" />
-          <div className="skeleton h-48 w-full" />
+          <div className="skeleton h-60 w-full rounded-2xl" />
+          <div className="skeleton h-48 w-full rounded-2xl" />
         </div>
       </AppLayout>
     );
@@ -118,7 +118,7 @@ export default function Wallet() {
   if (error || !data) {
     return (
       <AppLayout title="Wallet & Liquidity Hub">
-        <div className="rounded-xl bg-danger-50 border border-danger-100 px-4 py-3 text-sm text-danger-700">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400">
           Failed to load wallet data: {error}
         </div>
       </AppLayout>
@@ -126,7 +126,6 @@ export default function Wallet() {
   }
 
   const { wallet, activeStreams, transactions } = data;
-  const isClient = user.role === "CLIENT";
 
   return (
     <AppLayout
@@ -135,36 +134,36 @@ export default function Wallet() {
     >
       <div className="space-y-8">
         {/* Main Wallet Hero Card */}
-        <div className="card p-8 bg-navy-900 !border-navy-800 text-white relative overflow-hidden">
-          <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-accent/25 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+        <div className="p-8 rounded-2xl bg-gradient-to-br from-[#141414] to-[#0A0A0A] border border-white/[0.08] text-white relative overflow-hidden shadow-2xl">
+          <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-[#6366F1]/15 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 uppercase tracking-wider border border-emerald-500/30">
+                <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 uppercase tracking-wider border border-emerald-500/30">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                   {wallet.network}
                 </span>
 
-                <div className="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-full text-xs font-mono text-white/80">
+                <div className="flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] px-3 py-1 rounded-full text-xs font-mono text-slate-300">
                   <span>{truncateAddress(wallet.walletAddress)}</span>
                   <button
                     onClick={() => copyAddress(wallet.walletAddress)}
-                    className="hover:text-accent-300 text-white/50 transition-colors"
+                    className="hover:text-white text-slate-400 transition-colors text-[11px]"
                     title="Copy full address"
                   >
-                    {copied ? "✓ Copied" : "📋"}
+                    {copied ? "Copied" : "Copy"}
                   </button>
                 </div>
               </div>
 
               <div>
-                <p className="text-xs font-medium text-white/50 uppercase tracking-wider">Available Spendable Balance</p>
-                <h2 className="font-tabular text-4xl sm:text-5xl font-extrabold text-white tracking-tight mt-1">
+                <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">Available Spendable Balance</p>
+                <h2 className="font-mono text-4xl sm:text-5xl font-bold text-white tracking-tight mt-1">
                   {formatEth(wallet.availableBalance)}
                 </h2>
-                <p className="text-xs text-white/60 mt-1.5">
+                <p className="text-xs text-slate-400 mt-1.5 font-sans">
                   Available for instant stream funding, milestone releases, or transfers.
                 </p>
               </div>
@@ -173,43 +172,43 @@ export default function Wallet() {
               <div className="flex items-center gap-3 pt-3 flex-wrap">
                 <button
                   onClick={() => setDepositOpen(true)}
-                  className="btn-primary !bg-emerald-500 hover:!bg-emerald-600 !text-navy-950 font-semibold shadow-lg shadow-emerald-500/20"
+                  className="h-10 px-5 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-medium text-xs font-mono tracking-wider uppercase transition-all shadow-md shadow-indigo-500/25 flex items-center gap-2"
                 >
-                  ⚡ Add Funds (Faucet Deposit)
+                  + Add Funds (Faucet)
                 </button>
                 <button
                   onClick={() => setTransferOpen(true)}
-                  className="btn-secondary !bg-white/10 !text-white !border-white/20 hover:!bg-white/20"
+                  className="h-10 px-5 rounded-xl bg-[#171717] hover:bg-[#1F1F1F] text-slate-200 border border-white/[0.08] font-medium text-xs font-mono tracking-wider uppercase transition-all flex items-center gap-2"
                 >
-                  ↗ Send / Transfer
+                  Send / Transfer &rarr;
                 </button>
               </div>
             </div>
 
             {/* Quick Balances Stats Card */}
-            <div className="lg:col-span-4 rounded-2xl bg-white/[0.05] border border-white/10 p-6 space-y-4">
-              <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+            <div className="lg:col-span-4 rounded-2xl bg-[#050505]/80 border border-white/[0.08] p-6 space-y-4 shadow-xl">
+              <p className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider">
                 Liquidity Allocations
               </p>
 
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                  <span className="text-white/60 text-xs">Locked in Stream Escrows</span>
-                  <span className="font-tabular font-bold text-amber-400">
+              <div className="space-y-3 text-xs font-mono">
+                <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                  <span className="text-slate-400">Locked in Stream Escrows</span>
+                  <span className="font-bold text-amber-400">
                     {formatEth(wallet.lockedInEscrows)}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-2 border-b border-white/10">
-                  <span className="text-white/60 text-xs">Total Ledger Events</span>
-                  <span className="font-tabular font-bold text-white">
+                <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                  <span className="text-slate-400">Total Ledger Events</span>
+                  <span className="font-bold text-white">
                     {wallet.totalTransactions} Txns
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-white/60 text-xs">Account Role</span>
-                  <span className="font-semibold text-accent-300 capitalize text-xs">
+                  <span className="text-slate-400">Account Role</span>
+                  <span className="font-semibold text-[#818CF8] capitalize">
                     {wallet.role.toLowerCase()}
                   </span>
                 </div>
@@ -220,32 +219,32 @@ export default function Wallet() {
 
         {/* Active Stream Allocations */}
         {activeStreams.length > 0 && (
-          <div className="card p-6 space-y-4">
+          <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-display font-semibold text-lg text-ink-900">
+              <h3 className="font-medium text-base text-white">
                 Active Stream Escrow Vaults ({activeStreams.length})
               </h3>
-              <Link to="/agreements" className="text-xs font-semibold text-accent hover:underline">
+              <Link to="/agreements" className="text-xs font-mono text-[#818CF8] hover:underline">
                 View All Streams &rarr;
               </Link>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeStreams.map((stream) => (
-                <div key={stream.id} className="p-4 rounded-xl bg-ink-900/[0.02] border border-border-soft space-y-2">
+                <div key={stream.id} className="p-4 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
                   <div className="flex justify-between items-start gap-2">
-                    <p className="font-medium text-sm text-ink-900 truncate">{stream.title}</p>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-accent-50 text-accent-700">
+                    <p className="font-medium text-sm text-white truncate">{stream.title}</p>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#6366F1]/15 text-[#818CF8] border border-indigo-500/30">
                       {stream.category}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs text-ink-500 font-tabular pt-1 border-t border-border-soft">
+                  <div className="flex justify-between text-xs text-slate-400 font-mono pt-1 border-t border-white/[0.06]">
                     <span>Locked in Vault:</span>
-                    <strong className="text-ink-800">{formatEth(stream.escrowBalance)}</strong>
+                    <strong className="text-white">{formatEth(stream.escrowBalance)}</strong>
                   </div>
                   <Link
                     to={`/agreements/${stream.id}`}
-                    className="text-xs text-accent font-semibold hover:underline block pt-1"
+                    className="text-xs text-[#818CF8] font-mono hover:underline block pt-1"
                   >
                     Open Stream &rarr;
                   </Link>
@@ -256,53 +255,53 @@ export default function Wallet() {
         )}
 
         {/* Complete Wallet Activity History */}
-        <div className="card p-6 space-y-4">
+        <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-display font-semibold text-lg text-ink-900">
+              <h3 className="font-medium text-base text-white">
                 Wallet Ledger &amp; Transaction History
               </h3>
-              <p className="text-xs text-ink-400">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Every deposit, stream lock, and withdrawal verified with cryptographic SHA-256 blocks.
               </p>
             </div>
-            <Link to="/blockchain" className="text-xs font-semibold text-accent hover:underline">
+            <Link to="/blockchain" className="text-xs font-mono text-[#818CF8] hover:underline">
               Inspect Blocks &rarr;
             </Link>
           </div>
 
-          <div className="divide-y divide-border-soft">
+          <div className="divide-y divide-white/[0.06]">
             {transactions.length === 0 ? (
-              <p className="text-sm text-ink-400 py-6 text-center">No transactions recorded yet.</p>
+              <p className="text-xs font-mono text-slate-400 py-6 text-center">No transactions recorded yet.</p>
             ) : (
               transactions.map((tx) => {
-                const badgeClass = TX_BADGES[tx.type] || "bg-slate-100 text-slate-700";
+                const badgeClass = TX_BADGES[tx.type] || "bg-white/[0.08] text-slate-300";
                 const isIncoming = tx.toUser === user.id;
 
                 return (
                   <div key={tx.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${badgeClass}`}>
+                        <span className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${badgeClass}`}>
                           {tx.type}
                         </span>
-                        <span className="font-mono text-xs text-ink-500">
+                        <span className="font-mono text-xs text-slate-400">
                           {truncateAddress(tx.simulatedTxHash)}
                         </span>
                       </div>
-                      <p className="text-xs text-ink-400 font-tabular">
+                      <p className="text-xs text-slate-500 font-mono">
                         {formatDateTime(tx.timestamp)}
                         {tx.agreementId && (
-                          <span> &middot; Stream: <Link to={`/agreements/${tx.agreementId}`} className="text-accent underline">#{tx.agreementId}</Link></span>
+                          <span> &middot; Stream: <Link to={`/agreements/${tx.agreementId}`} className="text-[#818CF8] underline">#{tx.agreementId}</Link></span>
                         )}
                       </p>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className={`font-tabular text-base font-bold ${isIncoming ? "text-emerald-600" : "text-ink-900"}`}>
+                      <p className={`font-mono text-base font-bold ${isIncoming ? "text-emerald-400" : "text-white"}`}>
                         {isIncoming ? "+" : "-"}{formatEth(tx.amount)}
                       </p>
-                      <span className="text-[10px] text-ink-400 font-mono">Confirmed</span>
+                      <span className="text-[10px] text-slate-500 font-mono">Confirmed</span>
                     </div>
                   </div>
                 );
@@ -316,15 +315,15 @@ export default function Wallet() {
       <Modal
         open={depositOpen}
         onClose={() => setDepositOpen(false)}
-        title="Deposit Funds to Wallet (Simulated Faucet)"
+        title="Deposit Funds to Wallet (Faucet)"
         subtitle="Mint testnet ETH to fund payment streams or test withdrawals."
         footer={
           <>
             <button className="btn-secondary" onClick={() => setDepositOpen(false)} disabled={depositing}>
               Cancel
             </button>
-            <button className="btn-primary !bg-emerald-500 hover:!bg-emerald-600 !text-navy-950 font-semibold" onClick={handleDeposit} disabled={depositing}>
-              {depositing && <span className="h-3.5 w-3.5 rounded-full border-2 border-navy-950/40 border-t-navy-950 animate-spin mr-2" />}
+            <button className="btn-primary !bg-[#6366F1]" onClick={handleDeposit} disabled={depositing}>
+              {depositing && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin mr-2" />}
               {depositing ? "Mining Deposit Block..." : `Deposit ${depositAmount || 0} ETH`}
             </button>
           </>
@@ -339,10 +338,10 @@ export default function Wallet() {
                   type="button"
                   key={preset}
                   onClick={() => setDepositAmount(preset)}
-                  className={`py-2 rounded-xl text-xs font-semibold font-tabular border transition-all ${
+                  className={`py-2 rounded-xl text-xs font-mono font-semibold border transition-all ${
                     depositAmount === preset
-                      ? "bg-navy-900 text-white border-navy-900"
-                      : "bg-ink-900/[0.03] text-ink-700 border-border-soft hover:bg-ink-900/[0.08]"
+                      ? "bg-[#6366F1] text-white border-[#6366F1]"
+                      : "bg-[#171717] text-slate-300 border-white/[0.08] hover:bg-[#1F1F1F]"
                   }`}
                 >
                   +{preset} ETH
@@ -358,7 +357,7 @@ export default function Wallet() {
               step="0.01"
               min="0.01"
               max="1000"
-              className="input font-tabular"
+              className="input font-mono"
               value={depositAmount}
               onChange={(e) => setDepositAmount(e.target.value)}
               placeholder="e.g. 5.0"
@@ -366,8 +365,8 @@ export default function Wallet() {
             />
           </div>
 
-          <div className="rounded-xl bg-accent-50/70 border border-accent-100 p-3 text-xs text-accent-800 leading-relaxed">
-            ⚡ <strong>Instant Testnet Settlement:</strong> Deposited funds will be credited to your address ({truncateAddress(wallet.walletAddress)}) and recorded in the next mined blockchain block.
+          <div className="rounded-xl bg-[#6366F1]/10 border border-indigo-500/25 p-3 text-xs font-mono text-slate-300 leading-relaxed">
+            <strong>Instant Testnet Settlement:</strong> Deposited funds will be credited to {truncateAddress(wallet.walletAddress)} and mined into the blockchain ledger.
           </div>
         </form>
       </Modal>
@@ -383,7 +382,7 @@ export default function Wallet() {
             <button className="btn-secondary" onClick={() => setTransferOpen(false)} disabled={transferring}>
               Cancel
             </button>
-            <button className="btn-primary" onClick={handleTransfer} disabled={transferring}>
+            <button className="btn-primary !bg-[#6366F1]" onClick={handleTransfer} disabled={transferring}>
               {transferring && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin mr-2" />}
               {transferring ? "Mining Transfer Tx..." : "Confirm & Send"}
             </button>
@@ -406,8 +405,8 @@ export default function Wallet() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="field-label !mb-0">Transfer Amount (ETH)</label>
-              <span className="text-xs text-ink-400 font-tabular">
-                Available: <strong className="text-ink-800">{formatEth(wallet.availableBalance)}</strong>
+              <span className="text-xs text-slate-400 font-mono">
+                Available: <strong className="text-white">{formatEth(wallet.availableBalance)}</strong>
               </span>
             </div>
             <input
@@ -415,7 +414,7 @@ export default function Wallet() {
               step="0.01"
               min="0.01"
               max={wallet.availableBalance}
-              className="input font-tabular"
+              className="input font-mono"
               value={transferAmount}
               onChange={(e) => setTransferAmount(e.target.value)}
               placeholder="e.g. 0.5"

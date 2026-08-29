@@ -1,12 +1,6 @@
 import { useState } from "react";
 import Modal from "./Modal.jsx";
 
-/**
- * A confirm dialog that owns its own loading/error state so every
- * financial action (fund escrow, release payment, ...) gets a
- * consistent "confirm -> loading -> success or error" pattern instead
- * of each page re-implementing it.
- */
 export default function ConfirmDialog({
   open,
   onClose,
@@ -34,7 +28,12 @@ export default function ConfirmDialog({
     setLoading(false);
   }
 
-  const confirmClass = tone === "danger" ? "btn-danger !text-white !bg-danger-600 !border-danger-600 hover:!bg-danger-700" : tone === "success" ? "btn-success" : "btn-primary";
+  const confirmClass =
+    tone === "danger"
+      ? "h-10 px-5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-mono text-xs font-semibold uppercase tracking-wide transition-all shadow-md"
+      : tone === "success"
+      ? "h-10 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-mono text-xs font-semibold uppercase tracking-wide transition-all shadow-md shadow-emerald-500/20"
+      : "h-10 px-5 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-mono text-xs font-semibold uppercase tracking-wide transition-all shadow-md shadow-indigo-500/25";
 
   return (
     <Modal
@@ -49,7 +48,7 @@ export default function ConfirmDialog({
           </button>
           <button className={confirmClass} onClick={handleConfirm} disabled={loading}>
             {loading && (
-              <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin mr-2" />
             )}
             {loading ? loadingLabel : confirmLabel}
           </button>
@@ -58,7 +57,7 @@ export default function ConfirmDialog({
     >
       {children}
       {error && (
-        <div className="mt-4 rounded-xl bg-danger-50 border border-danger-100 px-3.5 py-3 text-sm text-danger-700">
+        <div className="mt-4 rounded-xl bg-rose-500/10 border border-rose-500/20 px-3.5 py-3 text-xs font-mono text-rose-400">
           {error}
         </div>
       )}

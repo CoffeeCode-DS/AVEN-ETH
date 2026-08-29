@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -14,6 +14,7 @@ html,
 body,
 #root {
   height: 100%;
+  background-color: #000000;
 }
 
 body {
@@ -27,23 +28,23 @@ h2,
 h3,
 h4,
 .font-display {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "'Geist'", "'Inter'", sans-serif;
   letter-spacing: -0.01em;
 }
 
 .font-tabular {
   font-variant-numeric: tabular-nums;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "'JetBrains Mono'", monospace;
 }
 
-/* Visible keyboard focus everywhere — accessibility floor */
+/* Visible keyboard focus everywhere */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid #3b4cff;
+  outline: 2px solid #6366F1;
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -61,37 +62,35 @@ select:focus-visible,
 
 /* Scrollbar polish */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d7dceb;
+  background: #222222;
   border-radius: 999px;
-  border: 2px solid #f6f7fb;
+  border: 2px solid #000000;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #c2c9dc;
+  background: #333333;
 }
 
-/* Escrow flow — the app's signature motif: a small pulse that travels
-   along the connector line between two parties whenever a simulated
-   transaction is in flight or freshly confirmed. */
+/* Escrow flow pulse */
 .escrow-line {
   position: relative;
   height: 2px;
   background: repeating-linear-gradient(
     90deg,
-    #c7cdea 0,
-    #c7cdea 6px,
+    rgba(255, 255, 255, 0.15) 0,
+    rgba(255, 255, 255, 0.15) 6px,
     transparent 6px,
     transparent 12px
   );
 }
 .escrow-line--active {
-  background: #3b4cff;
+  background: #6366F1;
 }
 .escrow-pulse {
   position: absolute;
@@ -100,8 +99,8 @@ select:focus-visible,
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #3b4cff;
-  box-shadow: 0 0 0 4px rgba(59, 76, 255, 0.18);
+  background: #6366F1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
   transform: translate(-50%, -50%);
   offset-path: path("M0,0 L100,0");
   animation: pulseTravel 1.6s ease-in-out infinite;
@@ -124,52 +123,49 @@ select:focus-visible,
   }
 }
 
-/* Component classes live in @layer components so plain Tailwind
-   utilities (e.g. bg-navy-900, !border-*) placed alongside them in a
-   className always win the cascade, exactly as Tailwind intends. */
 @layer components {
   .skeleton {
-    background: linear-gradient(90deg, #eef0f6 25%, #f7f8fc 37%, #eef0f6 63%);
+    background: linear-gradient(90deg, #0A0A0A 25%, #171717 37%, #0A0A0A 63%);
     background-size: 400px 100%;
     @apply animate-shimmer rounded-md;
   }
 
   .card {
-    @apply bg-surface border border-border rounded-2xl shadow-card;
+    @apply bg-[#0A0A0A] border border-white/[0.08] rounded-2xl shadow-2xl;
   }
 
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed select-none;
   }
   .btn-primary {
-    @apply btn bg-accent text-white px-4 py-2.5 hover:bg-accent-600 active:bg-accent-700 shadow-sm hover:shadow-md;
+    @apply btn bg-[#6366F1] text-white px-4 py-2.5 hover:bg-[#5558E6] active:bg-[#4F46E5] shadow-lg shadow-indigo-500/25;
   }
   .btn-secondary {
-    @apply btn bg-white text-ink-800 border border-border px-4 py-2.5 hover:bg-ink-900/[0.03] active:bg-ink-900/[0.06];
+    @apply btn bg-[#141414] text-slate-200 border border-white/[0.08] px-4 py-2.5 hover:bg-[#1F1F1F] hover:text-white active:bg-[#0A0A0A];
   }
   .btn-success {
-    @apply btn bg-success text-white px-4 py-2.5 hover:bg-success-700 shadow-sm hover:shadow-md;
+    @apply btn bg-[#10B981] text-white px-4 py-2.5 hover:bg-[#059669] shadow-sm;
   }
   .btn-danger {
-    @apply btn bg-white text-danger-600 border border-danger-100 px-4 py-2.5 hover:bg-danger-50;
+    @apply btn bg-[#F43F5E]/15 text-[#F43F5E] border border-[#F43F5E]/30 px-4 py-2.5 hover:bg-[#F43F5E]/25;
   }
   .btn-ghost {
-    @apply btn text-ink-500 px-3 py-2 hover:bg-ink-900/[0.04] hover:text-ink-800;
+    @apply btn text-slate-400 px-3 py-2 hover:bg-white/[0.06] hover:text-white;
   }
   .btn-sm {
-    @apply !px-3 !py-1.5 text-sm;
+    @apply !px-3 !py-1.5 text-xs;
   }
 
   .input {
-    @apply w-full rounded-xl border border-border bg-white px-3.5 py-2.5 text-[15px] text-ink-900 placeholder:text-ink-300 transition-colors focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10;
+    @apply w-full rounded-xl border border-white/[0.08] bg-[#121212] px-3.5 py-2.5 text-[14px] text-white placeholder:text-slate-500 transition-colors focus:border-[#6366F1] focus:outline-none focus:ring-1 focus:ring-[#6366F1];
   }
   .input-error {
-    @apply border-danger-600 focus:border-danger-600 focus:ring-danger-600/10;
+    @apply border-rose-500 focus:border-rose-500 focus:ring-rose-500/20;
   }
   .field-label {
-    @apply block text-sm font-medium text-ink-700 mb-1.5;
+    @apply block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5;
   }
   .field-error {
-    @apply mt-1.5 text-sm text-danger-600;
+    @apply mt-1.5 text-xs text-rose-400 font-mono;
   }
 }
