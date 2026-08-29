@@ -5,8 +5,8 @@ import { api } from "../api/client.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { formatEth } from "../utils/format.js";
 
-const STEPS = ["Project Details", "Freelancer", "Budget", "Deadline", "Review"];
-const CATEGORIES = ["Web Development", "UI/UX Design", "Mobile Development", "Security", "Smart Contracts", "Writing & Content"];
+const STEPS = ["Stream Details", "Recipient Worker", "Budget & Rate", "Duration & Deadline", "Review"];
+const CATEGORIES = ["Freelance", "Grant", "Bounty", "Salary", "AgentTask", "Subscription"];
 
 function minDateString() {
   const d = new Date();
@@ -33,12 +33,19 @@ export default function CreateAgreement() {
     deadline: "",
   });
 
+  const [walletBalance, setWalletBalance] = useState(null);
+
   useEffect(() => {
     api
       .freelancers()
       .then((res) => setFreelancers(res.freelancers))
       .catch(() => toast.error("Couldn't load freelancers. Try refreshing the page."))
       .finally(() => setLoadingFreelancers(false));
+
+    api
+      .wallet()
+      .then((res) => setWalletBalance(res.wallet?.availableBalance))
+      .catch(() => {});
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function set(field, value) {
@@ -213,7 +220,14 @@ export default function CreateAgreement() {
         {step === 2 && (
           <div className="space-y-5 animate-fadeUp">
             <div>
-              <label className="field-label">Total budget (ETH)</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="field-label !mb-0">Total Stream Budget (ETH)</label>
+                {walletBalance !== null && (
+                  <span className="text-xs text-ink-500 font-tabular">
+                    Your Wallet: <strong className="text-emerald-600">{formatEth(walletBalance)}</strong>
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <input
                   type="number"
@@ -230,12 +244,28 @@ export default function CreateAgreement() {
               </div>
               {errors.budget && <p className="field-error">{errors.budget}</p>}
               <p className="text-xs text-ink-400 mt-2">
-                Simulated value &mdash; no real cryptocurrency is used. This full amount will be locked in escrow once funded.
+                This amount will be locked in the Aven Stream Vault and stream continuously to the worker.
               </p>
             </div>
+
+            {walletBalance !== null && Number(form.budget) > walletBalance && (
+              <div className="rounded-xl bg-danger-50 border border-danger-100 p-3.5 flex items-center justify-between gap-3">
+                <div className="text-xs text-danger-700">
+                  <strong>Low Balance:</strong> Your wallet has {formatEth(walletBalance)}, which is less than {formatEth(Number(form.budget))}.
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/wallet")}
+                  className="btn-primary !bg-danger-600 !text-white text-xs py-1.5 px-3 shrink-0"
+                >
+                  + Add Funds in Wallet Hub
+                </button>
+              </div>
+            )}
+
             {Number(form.budget) > 0 && !errors.budget && (
               <div className="rounded-xl bg-accent-50 border border-accent-100 px-4 py-3.5 flex items-center justify-between">
-                <span className="text-sm text-ink-600">Amount to lock in escrow</span>
+                <span className="text-sm text-ink-600">Amount to lock in stream vault</span>
                 <span className="font-tabular font-semibold text-accent-700">{formatEth(Number(form.budget))}</span>
               </div>
             )}

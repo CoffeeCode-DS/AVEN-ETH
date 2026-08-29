@@ -27,7 +27,7 @@ export default function FreelancerDashboard() {
   return (
     <AppLayout
       title={`${greeting()}, ${firstName(user.name)}.`}
-      subtitle="Track your projects, work sessions and earnings."
+      subtitle="Track your real-time payment streams, work sessions and on-chain reputation."
     >
       {error && (
         <div className="rounded-xl bg-danger-50 border border-danger-100 px-4 py-3 text-sm text-danger-700 mb-6">
@@ -40,38 +40,55 @@ export default function FreelancerDashboard() {
       {data && (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard label="Active Projects" value={data.stats.activeProjects} />
-            <StatCard label="In Progress" value={data.stats.inProgress} tone="accent" />
+            <StatCard label="Active Streams" value={data.stats.activeProjects} />
             <StatCard
-              label="Pending Reviews"
-              value={data.stats.pendingReviews}
-              tone={data.stats.pendingReviews > 0 ? "warning" : "default"}
+              label="Claimable Now"
+              value={formatEth(data.stats.claimableStreamBalance || 0)}
+              tone={data.stats.claimableStreamBalance > 0 ? "accent" : "default"}
+              hint="Accrued from active streams"
             />
-            <StatCard label="Total Earned" value={formatEth(data.stats.totalEarned)} tone="success" />
+            <StatCard
+              label="On-Chain Reputation"
+              value={`${data.stats.reputationScore || 0} pts`}
+              tone="success"
+              hint={`${data.stats.totalAttestations || 0} verified attestations`}
+            />
+            <StatCard label="Total Settled" value={formatEth(data.stats.totalEarned)} tone="default" />
           </div>
 
-          {current && current.status === "IN_PROGRESS" && (
-            <div className="card p-6 mb-8 bg-navy-900 !border-navy-900 relative overflow-hidden">
-              <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
+          {current && (
+            <div className="card p-6 mb-8 bg-navy-900 !border-navy-800 relative overflow-hidden text-white">
+              <div className="absolute -top-16 -right-16 h-56 w-56 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
               <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold tracking-widest text-accent-400 uppercase mb-2">
-                    Current Project
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                    </span>
+                    <p className="text-xs font-semibold tracking-widest text-accent-400 uppercase">
+                      Active Payment Stream
+                    </p>
+                  </div>
                   <h3 className="font-display text-xl font-semibold text-white">{current.title}</h3>
-                  <p className="text-white/50 text-sm mt-1">
-                    {current.client?.name} &middot; {formatEth(current.escrowBalance)} in escrow
+                  <p className="text-white/50 text-sm mt-1 font-tabular">
+                    Client: {current.client?.name} &middot; {formatEth(current.escrowBalance)} in vault
                   </p>
                 </div>
-                <Link to={`/agreements/${current.id}/work`} className="btn-primary shrink-0">
-                  Continue Work
-                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link to={`/agreements/${current.id}`} className="btn-secondary !bg-white/10 !text-white !border-white/20 hover:!bg-white/20">
+                    Stream Hub
+                  </Link>
+                  <Link to={`/agreements/${current.id}/work`} className="btn-primary">
+                    Work Session &amp; Proof
+                  </Link>
+                </div>
               </div>
             </div>
           )}
 
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-semibold text-ink-900">Active Projects</h2>
+            <h2 className="font-display font-semibold text-ink-900">Payment Streams</h2>
             <Link to="/agreements" className="text-sm font-medium text-accent hover:underline">
               View all
             </Link>
@@ -80,8 +97,8 @@ export default function FreelancerDashboard() {
           {data.activeAgreements.length === 0 ? (
             <div className="card">
               <EmptyState
-                title="No active projects"
-                message="Once a client funds an agreement with you, it will show up here ready to start."
+                title="No active payment streams"
+                message="Once a client funds a stream for you, it will appear here ready to start earning."
               />
             </div>
           ) : (

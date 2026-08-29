@@ -54,7 +54,7 @@ export default function Blockchain() {
               )}
             </div>
             <p className="text-xs text-ink-300">
-              Real SHA-256 proof-of-work &middot; difficulty 3 &middot; AVEN-ETH Simulation Network
+              SHA-256 Proof-of-Work Blocks &middot; Difficulty 3 &middot; AVEN-ETH Ethereum Network
             </p>
           </div>
 

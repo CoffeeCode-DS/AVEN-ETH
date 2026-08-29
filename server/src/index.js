@@ -8,6 +8,9 @@ import transactionsRoutes from "./routes/transactions.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import dashboardRoutes from "./routes/dashboard.routes.js";
 import blockchainRoutes from "./routes/blockchain.routes.js";
+import reputationRoutes from "./routes/reputation.routes.js";
+import attestationsRoutes from "./routes/attestations.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -26,6 +29,9 @@ app.use("/api/transactions", transactionsRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/blockchain", blockchainRoutes);
+app.use("/api/reputation", reputationRoutes);
+app.use("/api/attestations", attestationsRoutes);
+app.use("/api/wallet", walletRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: "Not found." });

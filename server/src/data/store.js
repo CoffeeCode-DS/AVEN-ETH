@@ -85,6 +85,7 @@ export const db = {
   agreements: new Collection(seed.agreements),
   workSessions: new Collection(seed.workSessions),
   submissions: new Collection(seed.submissions),
+  attestations: new Collection(seed.attestations || []),
   transactions: new Collection(buildSeededTransactions()),
   notifications: new Collection(seed.notifications),
 };
@@ -94,6 +95,7 @@ export function resetDb() {
   db.agreements = new Collection(seed.agreements);
   db.workSessions = new Collection(seed.workSessions);
   db.submissions = new Collection(seed.submissions);
+  db.attestations = new Collection(seed.attestations || []);
   db.transactions = new Collection(buildSeededTransactions());
   db.notifications = new Collection(seed.notifications);
 }

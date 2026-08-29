@@ -15,6 +15,9 @@ import Blockchain from "./pages/Blockchain.jsx";
 import Security from "./pages/Security.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Profile from "./pages/Profile.jsx";
+import Reputation from "./pages/Reputation.jsx";
+import Attestations from "./pages/Attestations.jsx";
+import Wallet from "./pages/Wallet.jsx";
 
 function Dashboard() {
   const { user } = useAuth();
@@ -31,6 +34,15 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/wallet"
+        element={
+          <ProtectedRoute>
+            <Wallet />
           </ProtectedRoute>
         }
       />
@@ -112,6 +124,24 @@ export default function App() {
         element={
           <ProtectedRoute>
             <Notifications />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reputation"
+        element={
+          <ProtectedRoute>
+            <Reputation />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/attestations"
+        element={
+          <ProtectedRoute>
+            <Attestations />
           </ProtectedRoute>
         }
       />

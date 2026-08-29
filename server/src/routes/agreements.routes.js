@@ -5,13 +5,20 @@ import {
   createAgreement,
   fundEscrow,
   startProject,
+  pauseStream,
+  resumeStream,
+  cancelStream,
+  withdrawStreamed,
   workAction,
   submitWork,
   approveAndRelease,
   requestRevision,
   rejectSubmission,
+  computeEarned,
+  computeAvailable,
   DomainError,
 } from "../services/escrowService.js";
+import { computeReputation } from "../services/reputationService.js";
 
 const router = Router();
 router.use(requireAuth);
@@ -37,21 +44,38 @@ function enrich(agreement) {
   const freelancer = db.users.findById(agreement.freelancerId);
   const submission = db.submissions.findOne((s) => s.agreementId === agreement.id);
   const session = db.workSessions.findOne((s) => s.agreementId === agreement.id);
+  const attestations = db.attestations.find((a) => a.streamId === agreement.id);
+
+  const freelancerRep = freelancer ? computeReputation(freelancer.id) : null;
+
   return {
     ...agreement,
-    client: client ? { id: client.id, name: client.name, avatar: client.avatar, walletAddress: client.walletAddress } : null,
+    earnedAmount: computeEarned(agreement),
+    availableAmount: computeAvailable(agreement),
+    client: client
+      ? {
+          id: client.id,
+          name: client.name,
+          avatar: client.avatar,
+          walletAddress: client.walletAddress,
+          walletBalance: client.walletBalance,
+        }
+      : null,
     freelancer: freelancer
       ? {
           id: freelancer.id,
           name: freelancer.name,
           avatar: freelancer.avatar,
           walletAddress: freelancer.walletAddress,
-          rating: freelancer.rating,
+          walletBalance: freelancer.walletBalance,
+          rating: freelancerRep ? Math.round((freelancerRep.totalScore / 2000) * 10) / 10 : 4.9,
+          reputationScore: freelancerRep?.totalScore || 0,
           hourlyRate: freelancer.hourlyRate,
         }
       : null,
     submission: submission || null,
     session: session || null,
+    attestations: attestations || [],
   };
 }
 
@@ -78,7 +102,19 @@ router.get("/:id", (req, res) => {
 
 router.post("/", requireRole("CLIENT"), (req, res) => {
   handle(res, () => {
-    const { title, description, category, freelancerId, budget, deadline } = req.body || {};
+    const {
+      title,
+      description,
+      category,
+      freelancerId,
+      budget,
+      deadline,
+      durationHours,
+      ratePerSecond,
+      checkpointCount,
+      withdrawableCapPercent,
+    } = req.body || {};
+
     const agreement = createAgreement({
       clientId: req.user.id,
       freelancerId,
@@ -87,6 +123,10 @@ router.post("/", requireRole("CLIENT"), (req, res) => {
       category,
       budget: Number(budget),
       deadline,
+      durationHours,
+      ratePerSecond,
+      checkpointCount,
+      withdrawableCapPercent,
     });
     return { agreement: enrich(agreement) };
   });
@@ -101,8 +141,44 @@ router.post("/:id/fund", requireRole("CLIENT"), (req, res) => {
 
 router.post("/:id/start", requireRole("FREELANCER"), (req, res) => {
   handle(res, () => {
-    const { agreement } = startProject(req.params.id, req.user.id);
+    const { agreement, session } = startProject(req.params.id, req.user.id);
+    return { agreement: enrich(agreement), session };
+  });
+});
+
+router.post("/:id/pause", requireRole("CLIENT"), (req, res) => {
+  handle(res, () => {
+    const { agreement } = pauseStream(req.params.id, req.user.id);
     return { agreement: enrich(agreement) };
+  });
+});
+
+router.post("/:id/resume", requireRole("CLIENT"), (req, res) => {
+  handle(res, () => {
+    const { agreement } = resumeStream(req.params.id, req.user.id);
+    return { agreement: enrich(agreement) };
+  });
+});
+
+router.post("/:id/cancel", requireRole("CLIENT"), (req, res) => {
+  handle(res, () => {
+    const { agreement, unearnedRefund, unwithdrawnEarned, attestation } = cancelStream(
+      req.params.id,
+      req.user.id
+    );
+    return { agreement: enrich(agreement), unearnedRefund, unwithdrawnEarned, attestation };
+  });
+});
+
+router.post("/:id/withdraw", requireRole("FREELANCER"), (req, res) => {
+  handle(res, () => {
+    const { amount } = req.body || {};
+    const { agreement, transaction, attestation, amountWithdrawn } = withdrawStreamed(
+      req.params.id,
+      req.user.id,
+      amount
+    );
+    return { agreement: enrich(agreement), transaction, attestation, amountWithdrawn };
   });
 });
 
@@ -114,34 +190,65 @@ router.post("/:id/work/:action", requireRole("FREELANCER"), (req, res) => {
   });
 });
 
+router.post("/:id/cli-sync", requireRole("FREELANCER"), (req, res) => {
+  handle(res, () => {
+    const { branch, commitsCount, changedFilesCount, linesAdded, linesDeleted, reportHash, accumulatedSeconds } = req.body || {};
+    const agreement = db.agreements.findById(req.params.id);
+    if (!agreement) return res.status(404).json({ error: "Agreement not found." });
+
+    let session = db.workSessions.findOne((s) => s.agreementId === agreement.id);
+    if (session) {
+      session = db.workSessions.update(session.id, {
+        branch: branch || session.branch,
+        commitsCount: typeof commitsCount === "number" ? commitsCount : session.commitsCount,
+        changedFilesCount: typeof changedFilesCount === "number" ? changedFilesCount : session.changedFilesCount,
+        linesAdded: typeof linesAdded === "number" ? linesAdded : session.linesAdded,
+        linesDeleted: typeof linesDeleted === "number" ? linesDeleted : session.linesDeleted,
+        reportHash: reportHash || session.reportHash,
+        accumulatedSeconds: typeof accumulatedSeconds === "number" ? accumulatedSeconds : session.accumulatedSeconds,
+      });
+    }
+    return { agreement: enrich(agreement), session };
+  });
+});
+
 router.post("/:id/submit", requireRole("FREELANCER"), (req, res) => {
   handle(res, () => {
-    const { description, deliverables } = req.body || {};
-    const { agreement } = submitWork(req.params.id, req.user.id, { description, deliverables });
-    return { agreement: enrich(agreement) };
+    const { description, deliverables, branch } = req.body || {};
+    const { agreement, submission } = submitWork(req.params.id, req.user.id, {
+      description,
+      deliverables,
+      branch,
+    });
+    return { agreement: enrich(agreement), submission };
   });
 });
 
 router.post("/:id/approve", requireRole("CLIENT"), (req, res) => {
   handle(res, () => {
-    const { agreement, transaction } = approveAndRelease(req.params.id, req.user.id);
-    return { agreement: enrich(agreement), transaction };
+    const { rating, review } = req.body || {};
+    const { agreement, transaction, attestation } = approveAndRelease(
+      req.params.id,
+      req.user.id,
+      { rating, review }
+    );
+    return { agreement: enrich(agreement), transaction, attestation };
   });
 });
 
 router.post("/:id/revision", requireRole("CLIENT"), (req, res) => {
   handle(res, () => {
     const { feedback } = req.body || {};
-    const { agreement } = requestRevision(req.params.id, req.user.id, feedback);
-    return { agreement: enrich(agreement) };
+    const { agreement, submission } = requestRevision(req.params.id, req.user.id, feedback);
+    return { agreement: enrich(agreement), submission };
   });
 });
 
 router.post("/:id/reject", requireRole("CLIENT"), (req, res) => {
   handle(res, () => {
     const { reason } = req.body || {};
-    const { agreement } = rejectSubmission(req.params.id, req.user.id, reason);
-    return { agreement: enrich(agreement) };
+    const { agreement, submission } = rejectSubmission(req.params.id, req.user.id, reason);
+    return { agreement: enrich(agreement), submission };
   });
 });
 

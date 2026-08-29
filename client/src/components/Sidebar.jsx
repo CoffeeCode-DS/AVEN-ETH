@@ -36,6 +36,24 @@ const ICONS = {
       <path d="M4 17c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   ),
+  reputation: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+      <path d="M10 2l2.4 4.8 5.3.8-3.8 3.7.9 5.3L10 14.1 5.2 16.6l.9-5.3-3.8-3.7 5.3-.8L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  attestations: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+      <path d="M7 3h6l4 4v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M7 11.5l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  wallet: (
+    <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
+      <rect x="2.5" y="4" width="15" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M2.5 8h15" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="14" cy="11.5" r="1" fill="currentColor" />
+    </svg>
+  ),
   blockchain: (
     <svg viewBox="0 0 20 20" fill="none" className="h-[18px] w-[18px]">
       <rect x="2.5" y="3" width="5.5" height="5.5" rx="1.2" stroke="currentColor" strokeWidth="1.6" />
@@ -56,7 +74,10 @@ function navItemsFor(role) {
   if (role === "CLIENT") {
     return [
       { to: "/", label: "Overview", icon: ICONS.overview, end: true },
-      { to: "/agreements", label: "Agreements", icon: ICONS.agreements },
+      { to: "/wallet", label: "Wallet & Funds", icon: ICONS.wallet },
+      { to: "/agreements", label: "Payment Streams", icon: ICONS.agreements },
+      { to: "/attestations", label: "Attestations", icon: ICONS.attestations },
+      { to: "/reputation", label: "Reputation", icon: ICONS.reputation },
       { to: "/transactions", label: "Transactions", icon: ICONS.transactions },
       { to: "/blockchain", label: "Blockchain", icon: ICONS.blockchain },
       { to: "/security", label: "Security", icon: ICONS.security },
@@ -66,8 +87,11 @@ function navItemsFor(role) {
   }
   return [
     { to: "/", label: "Overview", icon: ICONS.overview, end: true },
-    { to: "/agreements", label: "Projects", icon: ICONS.agreements },
+    { to: "/wallet", label: "Wallet & Funds", icon: ICONS.wallet },
+    { to: "/agreements", label: "Payment Streams", icon: ICONS.agreements },
     { to: "/work-sessions", label: "Work Sessions", icon: ICONS.work },
+    { to: "/attestations", label: "Attestations", icon: ICONS.attestations },
+    { to: "/reputation", label: "My Reputation", icon: ICONS.reputation },
     { to: "/transactions", label: "Transactions", icon: ICONS.transactions },
     { to: "/blockchain", label: "Blockchain", icon: ICONS.blockchain },
     { to: "/security", label: "Security", icon: ICONS.security },
@@ -88,7 +112,7 @@ export function SidebarContent({ onNavigate }) {
         </div>
         <div>
           <p className="font-display font-semibold text-[15px] leading-none">AVEN-ETH</p>
-          <p className="text-[10px] text-white/40 mt-1 tracking-wide">SIMULATION MODE</p>
+          <p className="text-[10px] text-emerald-400 font-semibold mt-1 tracking-wide">ETHEREUM &bull; CHAIN ID 31337</p>
         </div>
       </div>
 

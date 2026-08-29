@@ -60,12 +60,23 @@ export const api = {
   createAgreement: (payload) => request("/agreements", { method: "POST", body: payload }),
   fundEscrow: (id) => request(`/agreements/${id}/fund`, { method: "POST" }),
   startProject: (id) => request(`/agreements/${id}/start`, { method: "POST" }),
+  pauseStream: (id) => request(`/agreements/${id}/pause`, { method: "POST" }),
+  resumeStream: (id) => request(`/agreements/${id}/resume`, { method: "POST" }),
+  cancelStream: (id) => request(`/agreements/${id}/cancel`, { method: "POST" }),
+  withdrawStream: (id, amount) => request(`/agreements/${id}/withdraw`, { method: "POST", body: { amount } }),
   workAction: (id, action) => request(`/agreements/${id}/work/${action}`, { method: "POST" }),
   submitWork: (id, payload) => request(`/agreements/${id}/submit`, { method: "POST", body: payload }),
-  approve: (id) => request(`/agreements/${id}/approve`, { method: "POST" }),
+  approve: (id, rating, review) => request(`/agreements/${id}/approve`, { method: "POST", body: { rating, review } }),
   requestRevision: (id, feedback) =>
     request(`/agreements/${id}/revision`, { method: "POST", body: { feedback } }),
   reject: (id, reason) => request(`/agreements/${id}/reject`, { method: "POST", body: { reason } }),
+
+  reputation: (userId) => request(`/reputation${userId ? `/${userId}` : ""}`),
+  attestations: (params) => {
+    const query = params ? new URLSearchParams(params).toString() : "";
+    return request(`/attestations${query ? `?${query}` : ""}`);
+  },
+  attestation: (id) => request(`/attestations/${id}`),
 
   transactions: () => request("/transactions"),
 
@@ -74,6 +85,10 @@ export const api = {
   tamperBlock: (blockNumber, newAmount) =>
     request("/blockchain/tamper", { method: "POST", body: { blockNumber, newAmount } }),
   restoreBlockchain: () => request("/blockchain/restore", { method: "POST" }),
+
+  wallet: () => request("/wallet"),
+  depositFunds: (amount, note) => request("/wallet/deposit", { method: "POST", body: { amount, note } }),
+  transferFunds: (toAddress, amount) => request("/wallet/transfer", { method: "POST", body: { toAddress, amount } }),
 
   notifications: () => request("/notifications"),
   markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: "POST" }),
