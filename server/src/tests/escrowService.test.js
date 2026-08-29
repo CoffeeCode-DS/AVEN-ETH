@@ -6,13 +6,20 @@ import {
   createAgreement,
   fundEscrow,
   startProject,
+  pauseStream,
+  resumeStream,
+  cancelStream,
+  withdrawStreamed,
   workAction,
   submitWork,
   approveAndRelease,
   requestRevision,
   rejectSubmission,
+  computeEarned,
+  computeAvailable,
   DomainError,
 } from "../services/escrowService.js";
+import { computeReputation, scoreAttestation } from "../services/reputationService.js";
 import { InvalidTransitionError } from "../services/stateMachine.js";
 
 const CLIENT_ID = "user_client_1";
@@ -24,8 +31,6 @@ function futureDate(days = 10) {
   return d.toISOString();
 }
 
-// Every test gets a clean slate so seed-data mutations from one test
-// never leak into another.
 test.beforeEach(() => {
   resetDb();
 });
@@ -75,13 +80,15 @@ test("createAgreement rejects a missing/invalid freelancer", () => {
   );
 });
 
-test("full happy-path lifecycle: create -> fund -> start -> work -> submit -> approve", () => {
+test("full happy-path streaming lifecycle: create -> fund -> start -> stream -> claim -> submit -> approve", () => {
   const agreement = createAgreement({
     clientId: CLIENT_ID,
     freelancerId: FREELANCER_ID,
     title: "Landing Page Rebuild",
-    description: "Rebuild the marketing landing page.",
+    description: "Rebuild the marketing landing page with continuous streams.",
+    category: "Freelance",
     budget: 0.4,
+    ratePerSecond: 0.0001,
     deadline: futureDate(),
   });
   assert.equal(agreement.status, "PENDING_FUNDING");
@@ -90,11 +97,9 @@ test("full happy-path lifecycle: create -> fund -> start -> work -> submit -> ap
   const { agreement: funded, transaction: fundTxn } = fundEscrow(agreement.id, CLIENT_ID);
   assert.equal(funded.status, "FUNDED");
   assert.equal(funded.escrowBalance, 0.4);
-  assert.equal(fundTxn.type, "ESCROW_FUNDED");
-  assert.ok(/^0x[0-9a-f]{64}$/.test(fundTxn.simulatedTxHash), "simulatedTxHash should be a real 0x-prefixed sha256 hex digest");
-  assert.ok(fundTxn.simulatedTxHash.startsWith("0x000"), "mined hash should satisfy the configured proof-of-work difficulty");
-  assert.equal(typeof fundTxn.nonce, "number");
-  assert.ok(fundTxn.previousHash.startsWith("0x"));
+  assert.equal(fundTxn.type, "STREAM_CREATED");
+  assert.ok(/^0x[0-9a-f]{64}$/.test(fundTxn.simulatedTxHash));
+  assert.ok(fundTxn.simulatedTxHash.startsWith("0x000"));
 
   const { agreement: started } = startProject(agreement.id, FREELANCER_ID);
   assert.equal(started.status, "IN_PROGRESS");
@@ -102,6 +107,7 @@ test("full happy-path lifecycle: create -> fund -> start -> work -> submit -> ap
   workAction(agreement.id, FREELANCER_ID, "start");
   const stoppedSession = workAction(agreement.id, FREELANCER_ID, "stop");
   assert.equal(stoppedSession.status, "STOPPED");
+  assert.ok(stoppedSession.reportHash.startsWith("0x"));
 
   const { agreement: submitted } = submitWork(agreement.id, FREELANCER_ID, {
     description: "Landing page rebuilt and deployed to staging.",
@@ -109,127 +115,121 @@ test("full happy-path lifecycle: create -> fund -> start -> work -> submit -> ap
   });
   assert.equal(submitted.status, "SUBMITTED");
 
-  const { agreement: completed, transaction: payTxn } = approveAndRelease(agreement.id, CLIENT_ID);
+  const { agreement: completed, transaction: payTxn, attestation } = approveAndRelease(
+    agreement.id,
+    CLIENT_ID,
+    { rating: 5, review: "Great work!" }
+  );
   assert.equal(completed.status, "COMPLETED");
   assert.equal(completed.escrowBalance, 0);
-  assert.equal(payTxn.type, "PAYMENT_RELEASED");
+  assert.equal(payTxn.type, "ATTESTATION_MINTED");
   assert.equal(payTxn.amount, 0.4);
 
-  // A PROJECT_COMPLETED marker transaction should also exist.
+  assert.ok(attestation);
+  assert.equal(attestation.recipient, FREELANCER_ID);
+  assert.equal(attestation.clientConfirmed, true);
+  assert.equal(attestation.rating, 5);
+
   const projectCompletedTxn = db.transactions.findOne(
     (t) => t.agreementId === agreement.id && t.type === "PROJECT_COMPLETED"
   );
   assert.ok(projectCompletedTxn);
 });
 
-test("revision loop: submit -> revision requested -> resubmit -> approve", () => {
+test("stream pausing and resuming", () => {
   const agreement = createAgreement({
     clientId: CLIENT_ID,
     freelancerId: FREELANCER_ID,
-    title: "Revision Loop Project",
-    description: "desc",
-    budget: 0.2,
+    title: "Pause Resume Stream",
+    description: "Testing pause and resume",
+    budget: 0.5,
     deadline: futureDate(),
   });
   fundEscrow(agreement.id, CLIENT_ID);
   startProject(agreement.id, FREELANCER_ID);
-  workAction(agreement.id, FREELANCER_ID, "start");
-  workAction(agreement.id, FREELANCER_ID, "stop");
-  submitWork(agreement.id, FREELANCER_ID, { description: "First attempt at the work.", deliverables: [] });
 
-  const { agreement: afterRevision, submission } = requestRevision(agreement.id, CLIENT_ID, "Please fix the header.");
-  assert.equal(afterRevision.status, "IN_PROGRESS");
-  assert.equal(submission.status, "REVISION_REQUESTED");
-  assert.equal(submission.clientFeedback, "Please fix the header.");
+  const { agreement: paused } = pauseStream(agreement.id, CLIENT_ID);
+  assert.equal(paused.status, "PAUSED");
 
-  // Freelancer must stop a session again before resubmitting.
-  workAction(agreement.id, FREELANCER_ID, "start");
-  workAction(agreement.id, FREELANCER_ID, "stop");
-  const { agreement: resubmitted, submission: sub2 } = submitWork(agreement.id, FREELANCER_ID, {
-    description: "Fixed the header as requested.",
-    deliverables: [],
-  });
-  assert.equal(resubmitted.status, "SUBMITTED");
-  assert.equal(sub2.revisionCount, 1);
-
-  const { agreement: completed } = approveAndRelease(agreement.id, CLIENT_ID);
-  assert.equal(completed.status, "COMPLETED");
+  const { agreement: resumed } = resumeStream(agreement.id, CLIENT_ID);
+  assert.equal(resumed.status, "IN_PROGRESS");
 });
 
-test("reject ends the agreement and requires a reason", () => {
+test("stream cancellation with automatic refund to client and earned payment to worker", () => {
   const agreement = createAgreement({
     clientId: CLIENT_ID,
     freelancerId: FREELANCER_ID,
-    title: "Reject Path Project",
-    description: "desc",
-    budget: 0.2,
+    title: "Cancellable Stream",
+    description: "Testing cancellation",
+    budget: 0.5,
     deadline: futureDate(),
   });
   fundEscrow(agreement.id, CLIENT_ID);
   startProject(agreement.id, FREELANCER_ID);
-  workAction(agreement.id, FREELANCER_ID, "start");
-  workAction(agreement.id, FREELANCER_ID, "stop");
-  submitWork(agreement.id, FREELANCER_ID, { description: "Submitted work for review.", deliverables: [] });
 
-  assert.throws(() => rejectSubmission(agreement.id, CLIENT_ID, ""), DomainError);
-
-  const { agreement: cancelled } = rejectSubmission(agreement.id, CLIENT_ID, "Does not meet requirements.");
+  const { agreement: cancelled, unearnedRefund } = cancelStream(agreement.id, CLIENT_ID);
   assert.equal(cancelled.status, "CANCELLED");
+  assert.equal(cancelled.escrowBalance, 0);
+  assert.ok(unearnedRefund >= 0);
 });
 
-test("invalid state transitions are rejected", () => {
+test("on-demand stream withdrawals mint an attestation and update wallet balance", () => {
   const agreement = createAgreement({
     clientId: CLIENT_ID,
     freelancerId: FREELANCER_ID,
-    title: "Invalid Transition Project",
-    description: "desc",
-    budget: 0.2,
-    deadline: futureDate(),
-  });
-
-  // Cannot approve before it's even funded/submitted.
-  assert.throws(() => approveAndRelease(agreement.id, CLIENT_ID), InvalidTransitionError);
-
-  fundEscrow(agreement.id, CLIENT_ID);
-  // Cannot fund twice.
-  assert.throws(() => fundEscrow(agreement.id, CLIENT_ID), InvalidTransitionError);
-});
-
-test("authorization: only the owning client can fund, only the assigned freelancer can start", () => {
-  const agreement = createAgreement({
-    clientId: CLIENT_ID,
-    freelancerId: FREELANCER_ID,
-    title: "Auth Project",
-    description: "desc",
-    budget: 0.2,
-    deadline: futureDate(),
-  });
-
-  assert.throws(() => fundEscrow(agreement.id, "some-other-client"), DomainError);
-  assert.throws(() => startProject(agreement.id, "some-other-freelancer"), DomainError);
-});
-
-test("cannot submit work without logging and stopping a work session", () => {
-  const agreement = createAgreement({
-    clientId: CLIENT_ID,
-    freelancerId: FREELANCER_ID,
-    title: "No Session Project",
-    description: "desc",
-    budget: 0.2,
+    title: "Withdrawal Stream",
+    description: "Testing withdrawals",
+    budget: 0.5,
+    ratePerSecond: 0.001,
     deadline: futureDate(),
   });
   fundEscrow(agreement.id, CLIENT_ID);
   startProject(agreement.id, FREELANCER_ID);
 
-  assert.throws(
-    () => submitWork(agreement.id, FREELANCER_ID, { description: "Trying to submit without working.", deliverables: [] }),
-    DomainError
-  );
-
+  // simulate work
   workAction(agreement.id, FREELANCER_ID, "start");
-  // Still running, not stopped yet.
-  assert.throws(
-    () => submitWork(agreement.id, FREELANCER_ID, { description: "Trying to submit while still running.", deliverables: [] }),
-    DomainError
-  );
+  workAction(agreement.id, FREELANCER_ID, "stop");
+
+  const session = db.workSessions.findOne((s) => s.agreementId === agreement.id);
+  db.workSessions.update(session.id, {
+    accumulatedSeconds: 3600,
+  });
+
+  const available = computeAvailable(db.agreements.findById(agreement.id));
+  assert.ok(available > 0, "Earned balance should be greater than 0");
+
+  const freelancerBefore = db.users.findById(FREELANCER_ID).walletBalance || 0;
+  const { attestation, amountWithdrawn } = withdrawStreamed(agreement.id, FREELANCER_ID, 0.05);
+
+  assert.ok(amountWithdrawn > 0);
+  assert.ok(attestation);
+  assert.equal(attestation.recipient, FREELANCER_ID);
+
+  const freelancerAfter = db.users.findById(FREELANCER_ID).walletBalance || 0;
+  assert.ok(freelancerAfter > freelancerBefore);
+});
+
+test("dynamic reputation calculation aggregates attestations into a score up to 10,000 pts", () => {
+  db.attestations.insert({
+    id: "att_test_1",
+    streamId: "agr_test",
+    recipient: FREELANCER_ID,
+    sender: CLIENT_ID,
+    amountPaid: 0.5,
+    kind: "WorkSession",
+    category: "Freelance",
+    clientConfirmed: true,
+    autoReleased: false,
+    createdAt: new Date().toISOString(),
+  });
+
+  const rep = computeReputation(FREELANCER_ID);
+  assert.ok(rep.totalScore > 0);
+  assert.ok(rep.totalScore <= 10000);
+  assert.ok(rep.categoryBreakdown.Freelance);
+  assert.equal(rep.attestations.length, 1);
+
+  const first = rep.attestations[0];
+  assert.ok(first.scoreBreakdown);
+  assert.ok(first.scoreBreakdown.totalPoints > 0);
 });

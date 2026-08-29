@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/client.js";
+import { formatEth } from "../utils/format.js";
 
 export default function Topbar({ title, subtitle, onMenuClick }) {
   const [unread, setUnread] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,9 +17,16 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
           if (!cancelled) setUnread(res.unreadCount);
         })
         .catch(() => {});
+
+      api
+        .wallet()
+        .then((res) => {
+          if (!cancelled) setWalletBalance(res.wallet?.availableBalance);
+        })
+        .catch(() => {});
     }
     load();
-    const interval = setInterval(load, 15000);
+    const interval = setInterval(load, 10000);
     return () => {
       cancelled = true;
       clearInterval(interval);
@@ -42,6 +51,22 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
           {subtitle && <p className="text-sm text-ink-400 truncate">{subtitle}</p>}
         </div>
 
+        {/* Live Wallet Balance Pill */}
+        <Link
+          to="/wallet"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-ink-900/[0.04] hover:bg-ink-900/[0.08] border border-border-soft text-ink-800 transition-colors text-xs font-semibold"
+          title="Open Wallet Hub & Add Funds"
+        >
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-tabular">
+            {walletBalance !== null ? formatEth(walletBalance) : "Wallet"}
+          </span>
+          <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-accent bg-accent-50 px-1.5 py-0.5 rounded">
+            + Funds
+          </span>
+        </Link>
+
+        {/* Notifications Icon */}
         <button
           onClick={() => navigate("/notifications")}
           aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}

@@ -51,33 +51,32 @@ export default function Login() {
 
         <div className="relative max-w-md">
           <p className="text-xs font-semibold tracking-widest text-accent-400 uppercase mb-4">
-            Simulation Mode &middot; No real funds
+            Decentralized Payment Streams &middot; On-Chain Reputation
           </p>
           <h1 className="font-display text-3xl font-semibold leading-tight">
-            Escrow-backed freelance work, without the blockchain guesswork.
+            Continuous real-time payments &amp; verifiable on-chain reputation.
           </h1>
-          <p className="text-white/50 mt-4 text-[15px] leading-relaxed">
-            Fund a project, watch escrow lock the payment, and release it the moment work is
-            approved &mdash; every step logged as a simulated on-chain transaction.
+          <p className="text-white/60 mt-4 text-[15px] leading-relaxed">
+            Stream tokens second-by-second as work happens, lock funds in audited vaults, and mint immutable cryptographic proof-of-work attestations directly on-chain.
           </p>
 
-          <div className="mt-10 flex items-center gap-3 text-sm text-white/40">
+          <div className="mt-10 flex items-center gap-3 text-sm text-white/50">
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent-400" /> Client
+              <span className="h-1.5 w-1.5 rounded-full bg-accent-400" /> Client Wallet
             </span>
             <span>&rarr;</span>
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-warning-600" /> Escrow
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400" /> Stream Vault
             </span>
             <span>&rarr;</span>
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-success-600" /> Freelancer
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Worker Payout
             </span>
           </div>
         </div>
 
-        <p className="relative text-xs text-white/30">
-          AVEN-ETH Simulation Network &middot; All values are demo data
+        <p className="relative text-xs text-white/40 font-mono">
+          AVEN-ETH Protocol &middot; Connected to Ethereum Local Net (Chain ID: 31337)
         </p>
       </div>
 
@@ -91,8 +90,8 @@ export default function Login() {
             <span className="font-display font-semibold text-lg text-ink-900">AVEN-ETH</span>
           </div>
 
-          <h2 className="font-display text-2xl font-semibold text-ink-900">Welcome back</h2>
-          <p className="text-ink-400 text-sm mt-1.5">Sign in to manage your escrow projects.</p>
+          <h2 className="font-display text-2xl font-semibold text-ink-900">Welcome to AVEN-ETH</h2>
+          <p className="text-ink-400 text-sm mt-1.5">Sign in to manage your payment streams and on-chain reputation.</p>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4" noValidate>
             <div>

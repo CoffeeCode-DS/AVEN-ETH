@@ -80,7 +80,7 @@ export default function BlockCard({ block, broken = false }) {
           <p className="font-tabular text-ink-700 mt-0.5">{block.difficulty}</p>
         </div>
       </div>
-      <p className="text-xs text-ink-300 mt-3">{formatDateTime(block.timestamp)} &middot; Proof of Work &middot; AVEN-ETH Simulation Network</p>
+      <p className="text-xs text-ink-300 mt-3">{formatDateTime(block.timestamp)} &middot; Proof of Work &middot; AVEN-ETH Network (Chain ID: 31337)</p>
     </div>
   );
 }
