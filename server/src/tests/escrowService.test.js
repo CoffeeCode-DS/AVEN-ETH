@@ -15,6 +15,8 @@ import {
   approveAndRelease,
   requestRevision,
   rejectSubmission,
+  raiseDispute,
+  resolveDispute,
   computeEarned,
   computeAvailable,
   DomainError,
@@ -232,4 +234,35 @@ test("dynamic reputation calculation aggregates attestations into a score up to 
   const first = rep.attestations[0];
   assert.ok(first.scoreBreakdown);
   assert.ok(first.scoreBreakdown.totalPoints > 0);
+});
+
+test("client dispute freezes stream, locks withdrawals, and allows resolution", () => {
+  const agreement = createAgreement({
+    clientId: CLIENT_ID,
+    freelancerId: FREELANCER_ID,
+    title: "Dispute Stream",
+    description: "Testing dispute freeze",
+    budget: 1.0,
+    ratePerSecond: 0.001,
+    deadline: futureDate(),
+  });
+  fundEscrow(agreement.id, CLIENT_ID);
+  startProject(agreement.id, FREELANCER_ID);
+
+  workAction(agreement.id, FREELANCER_ID, "start");
+
+  const { agreement: disputed } = raiseDispute(agreement.id, CLIENT_ID, "Suspected fake activity");
+  assert.equal(disputed.status, "DISPUTED");
+
+  const availableWhileDisputed = computeAvailable(disputed);
+  assert.equal(availableWhileDisputed, 0, "Available funds must be 0 while disputed");
+
+  const { agreement: resolved } = resolveDispute(agreement.id, CLIENT_ID, {
+    resolution: "SETTLE",
+    clientRefund: 0.8,
+    workerPayout: 0.2,
+  });
+
+  assert.equal(resolved.status, "COMPLETED");
+  assert.equal(resolved.escrowBalance, 0);
 });

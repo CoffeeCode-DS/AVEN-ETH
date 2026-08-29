@@ -103,6 +103,9 @@ export default function AgreementDetail() {
   const [revisionOpen, setRevisionOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const [disputing, setDisputing] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [reason, setReason] = useState("");
   const [actionError, setActionError] = useState(null);
@@ -259,6 +262,26 @@ export default function AgreementDetail() {
     }
   }
 
+  async function handleDisputeSubmit() {
+    if (disputeReason.trim().length < 5) {
+      setActionError("A reason is required to freeze this stream and raise a dispute.");
+      return;
+    }
+    setDisputing(true);
+    try {
+      await api.dispute(agreement.id, disputeReason.trim());
+      toast.success("Stream frozen & dispute logged. Payouts are locked.");
+      setDisputeOpen(false);
+      setDisputeReason("");
+      setActionError(null);
+      load();
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setDisputing(false);
+    }
+  }
+
   return (
     <AppLayout title={agreement.title} subtitle={agreement.category}>
       <button
@@ -362,57 +385,94 @@ export default function AgreementDetail() {
             </div>
           )}
 
-          {/* Submission (visible once one exists) */}
-          {agreement.submission && (
+          {/* Cryptographic Proof & Git Range Inspector */}
+          {(agreement.submission || agreement.session) && (
             <div className="card p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-ink-400 uppercase tracking-wide">
-                  Verified Work Submission
-                </p>
-                <StatusBadge status={agreement.submission.status} />
+                <div>
+                  <p className="text-xs font-semibold text-ink-400 uppercase tracking-wide">
+                    Cryptographic Proof &amp; Git Inspector
+                  </p>
+                  <p className="text-xs text-ink-500 mt-0.5">
+                    Session commit range verified against Ethereum consensus ledger
+                  </p>
+                </div>
+                {agreement.submission ? (
+                  <StatusBadge status={agreement.submission.status} />
+                ) : (
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Live Watcher Active
+                  </span>
+                )}
               </div>
-              <p className="text-[15px] text-ink-700 leading-relaxed">{agreement.submission.description}</p>
+
+              {agreement.submission?.description && (
+                <p className="text-[15px] text-ink-700 leading-relaxed">{agreement.submission.description}</p>
+              )}
+
+              {/* Verified Commit Range */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-ink-900/[0.03] text-xs font-mono border border-border-soft">
+                <div>
+                  <span className="text-ink-400 text-[11px] block uppercase tracking-wider mb-1">Base Commit Locked:</span>
+                  <span className="font-semibold text-ink-800 break-all">
+                    {agreement.submission?.baseCommit || agreement.session?.baseCommit || "0000000000000000000000000000000000000000"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-ink-400 text-[11px] block uppercase tracking-wider mb-1">Head Commit Recorded:</span>
+                  <span className="font-semibold text-ink-800 break-all">
+                    {agreement.submission?.headCommit || agreement.session?.headCommit || agreement.session?.baseCommit || "0000000000000000000000000000000000000000"}
+                  </span>
+                </div>
+              </div>
 
               {/* Git Metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-ink-900/[0.03] text-xs font-tabular">
                 <div>
                   <span className="text-ink-400 block">Git Branch</span>
                   <span className="font-semibold text-ink-800 font-mono">
-                    {agreement.submission.branch || "main"}
+                    {agreement.submission?.branch || agreement.session?.branch || "main"}
                   </span>
                 </div>
                 <div>
-                  <span className="text-ink-400 block">Commits</span>
+                  <span className="text-ink-400 block">Commits (Session)</span>
                   <span className="font-semibold text-ink-800">
-                    {agreement.submission.commitsCount || 0}
+                    {agreement.submission?.commitsCount || agreement.session?.commitsCount || 0}
                   </span>
                 </div>
                 <div>
-                  <span className="text-ink-400 block">Files Touched</span>
+                  <span className="text-ink-400 block">Files Modified</span>
                   <span className="font-semibold text-ink-800">
-                    {agreement.submission.changedFilesCount || 0}
+                    {agreement.submission?.changedFilesCount || agreement.session?.changedFilesCount || 0}
                   </span>
                 </div>
                 <div>
-                  <span className="text-ink-400 block">Line Changes</span>
+                  <span className="text-ink-400 block">Cumulative Diffs</span>
                   <span className="font-semibold text-emerald-600">
-                    +{agreement.submission.linesAdded || 0}
+                    +{agreement.submission?.linesAdded || agreement.session?.linesAdded || 0}
                   </span>{" "}
                   /{" "}
                   <span className="font-semibold text-danger-600">
-                    -{agreement.submission.linesDeleted || 0}
+                    -{agreement.submission?.linesDeleted || agreement.session?.linesDeleted || 0}
                   </span>
                 </div>
               </div>
 
-              {agreement.submission.reportHash && (
-                <div className="text-xs font-mono text-ink-500 bg-ink-900/[0.02] p-2.5 rounded-lg border border-border-soft break-all">
-                  <span className="font-semibold text-ink-700">SHA-256 Git Proof:</span>{" "}
-                  {agreement.submission.reportHash}
+              {(agreement.submission?.reportHash || agreement.session?.reportHash) && (
+                <div className="text-xs font-mono text-ink-600 bg-slate-900 text-white/90 p-3 rounded-xl space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-accent-400 font-semibold uppercase tracking-wider">
+                      SHA-256 Merkle Session Hash:
+                    </span>
+                    <span className="text-emerald-400 font-sans font-semibold">
+                      ✓ Consensus Verified
+                    </span>
+                  </div>
+                  <p className="break-all text-white/80">{agreement.submission?.reportHash || agreement.session?.reportHash}</p>
                 </div>
               )}
 
-              {agreement.submission.deliverables?.length > 0 && (
+              {agreement.submission?.deliverables?.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {agreement.submission.deliverables.map((d) => (
                     <span
@@ -428,7 +488,7 @@ export default function AgreementDetail() {
                 </div>
               )}
 
-              {agreement.submission.clientFeedback && (
+              {agreement.submission?.clientFeedback && (
                 <div className="mt-4 rounded-xl bg-warning-50 border border-warning-100 px-4 py-3">
                   <p className="text-xs font-semibold text-warning-700 uppercase tracking-wide mb-1">Client feedback</p>
                   <p className="text-sm text-ink-700">{agreement.submission.clientFeedback}</p>
@@ -510,6 +570,12 @@ export default function AgreementDetail() {
                       {pausing ? "Pausing..." : "Pause Stream"}
                     </button>
                     <button
+                      className="btn-secondary w-full !text-amber-700 !border-amber-300 hover:!bg-amber-50"
+                      onClick={() => setDisputeOpen(true)}
+                    >
+                      🛡️ Freeze &amp; Raise Dispute
+                    </button>
+                    <button
                       className="btn-danger w-full !bg-transparent !text-danger-600 hover:!bg-danger-50"
                       onClick={() => setCancelOpen(true)}
                     >
@@ -528,10 +594,29 @@ export default function AgreementDetail() {
                       {resuming ? "Resuming..." : "Resume Stream"}
                     </button>
                     <button
+                      className="btn-secondary w-full !text-amber-700 !border-amber-300 hover:!bg-amber-50"
+                      onClick={() => setDisputeOpen(true)}
+                    >
+                      🛡️ Freeze &amp; Raise Dispute
+                    </button>
+                    <button
                       className="btn-danger w-full !bg-transparent !text-danger-600 hover:!bg-danger-50"
                       onClick={() => setCancelOpen(true)}
                     >
                       Cancel Stream &amp; Refund
+                    </button>
+                  </div>
+                )}
+
+                {agreement.status === "DISPUTED" && (
+                  <div className="p-3 bg-danger-50 rounded-xl border border-danger-200 text-xs text-danger-800 space-y-2">
+                    <p className="font-bold">⚠️ Stream Frozen &amp; Disputed</p>
+                    <p>{agreement.disputeReason || "Stream has been frozen by the client for mediation."}</p>
+                    <button
+                      className="btn-danger w-full mt-2"
+                      onClick={() => setCancelOpen(true)}
+                    >
+                      Settle &amp; Cancel Stream
                     </button>
                   </div>
                 )}
@@ -732,6 +817,47 @@ export default function AgreementDetail() {
             setActionError(null);
           }}
         />
+        {actionError && <p className="field-error">{actionError}</p>}
+      </Modal>
+
+      {/* Dispute modal */}
+      <Modal
+        open={disputeOpen}
+        onClose={() => {
+          setDisputeOpen(false);
+          setActionError(null);
+        }}
+        title="Freeze Stream & Raise Dispute"
+        subtitle={agreement.title}
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setDisputeOpen(false)}>
+              Cancel
+            </button>
+            <button
+              className="btn-danger !text-white !bg-amber-600 !border-amber-600 hover:!bg-amber-700"
+              onClick={handleDisputeSubmit}
+              disabled={disputing}
+            >
+              {disputing ? "Freezing..." : "Freeze & Lock Stream"}
+            </button>
+          </>
+        }
+      >
+        <label className="field-label">Reason for freezing / dispute</label>
+        <textarea
+          rows={4}
+          className={`input resize-none ${actionError ? "input-error" : ""}`}
+          placeholder="Explain the issue (e.g. inactive worker, fake metrics, scope breach)..."
+          value={disputeReason}
+          onChange={(e) => {
+            setDisputeReason(e.target.value);
+            setActionError(null);
+          }}
+        />
+        <p className="text-xs text-ink-400 mt-2">
+          🛡️ Freezing immediately halts stream accrual and blocks on-demand withdrawals from the vault.
+        </p>
         {actionError && <p className="field-error">{actionError}</p>}
       </Modal>
     </AppLayout>

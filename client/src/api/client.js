@@ -70,6 +70,8 @@ export const api = {
   requestRevision: (id, feedback) =>
     request(`/agreements/${id}/revision`, { method: "POST", body: { feedback } }),
   reject: (id, reason) => request(`/agreements/${id}/reject`, { method: "POST", body: { reason } }),
+  dispute: (id, reason) => request(`/agreements/${id}/dispute`, { method: "POST", body: { reason } }),
+  resolveDispute: (id, payload) => request(`/agreements/${id}/dispute/resolve`, { method: "POST", body: payload }),
 
   reputation: (userId) => request(`/reputation${userId ? `/${userId}` : ""}`),
   attestations: (params) => {

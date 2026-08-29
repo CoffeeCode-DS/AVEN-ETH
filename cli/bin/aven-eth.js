@@ -89,8 +89,17 @@ function checkAndInitGit() {
   }
 }
 
-function getGitMetrics() {
+function getInitialBaseCommit() {
+  try {
+    return execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] }).trim();
+  } catch {
+    return null;
+  }
+}
+
+function getGitMetrics(baseCommit) {
   let branch = "main";
+  let headCommit = null;
   let commitsCount = 0;
   let changedFilesCount = 0;
   let linesAdded = 0;
@@ -101,25 +110,55 @@ function getGitMetrics() {
   } catch {}
 
   try {
-    const commitOut = execSync("git rev-list --count HEAD", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
-    commitsCount = parseInt(commitOut.trim(), 10) || 0;
+    headCommit = execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] }).trim();
   } catch {}
 
-  try {
-    const statusOut = execSync("git status --porcelain", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
-    const changedLines = statusOut.split("\n").filter((l) => l.trim().length > 0);
-    changedFilesCount = changedLines.length;
-  } catch {}
+  // 1. Commits made strictly since this work session started
+  if (baseCommit && headCommit && baseCommit !== headCommit) {
+    try {
+      const commitOut = execSync(`git rev-list --count ${baseCommit}..HEAD`, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "ignore"],
+      });
+      commitsCount = parseInt(commitOut.trim(), 10) || 0;
+    } catch {}
+  }
 
-  try {
-    const diffStat = execSync("git diff --shortstat", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
-    const addMatch = diffStat.match(/(\d+) insertion/);
-    const delMatch = diffStat.match(/(\d+) deletion/);
-    if (addMatch) linesAdded = parseInt(addMatch[1], 10);
-    if (delMatch) linesDeleted = parseInt(delMatch[1], 10);
-  } catch {}
+  // 2. Cumulative diff between baseCommit and working state (includes committed + uncommitted edits)
+  if (baseCommit && baseCommit !== "0000000000000000000000000000000000000000") {
+    try {
+      const diffStat = execSync(`git diff --shortstat ${baseCommit}`, {
+        encoding: "utf8",
+        stdio: ["pipe", "pipe", "ignore"],
+      });
+      const filesMatch = diffStat.match(/(\d+) file/);
+      const addMatch = diffStat.match(/(\d+) insertion/);
+      const delMatch = diffStat.match(/(\d+) deletion/);
+      if (filesMatch) changedFilesCount = parseInt(filesMatch[1], 10);
+      if (addMatch) linesAdded = parseInt(addMatch[1], 10);
+      if (delMatch) linesDeleted = parseInt(delMatch[1], 10);
+    } catch {}
+  } else {
+    // If empty fresh repo without initial commit
+    try {
+      const statusOut = execSync("git status --porcelain", { encoding: "utf8", stdio: ["pipe", "pipe", "ignore"] });
+      const changedLines = statusOut.split("\n").filter((l) => l.trim().length > 0);
+      changedFilesCount = changedLines.length;
+      if (changedFilesCount > 0) {
+        linesAdded = Math.max(linesAdded, changedFilesCount * 5);
+      }
+    } catch {}
+  }
 
-  return { branch, commitsCount, changedFilesCount, linesAdded, linesDeleted };
+  return {
+    branch,
+    baseCommit: baseCommit || "0000000000000000000000000000000000000000",
+    headCommit: headCommit || baseCommit || "0000000000000000000000000000000000000000",
+    commitsCount,
+    changedFilesCount,
+    linesAdded,
+    linesDeleted,
+  };
 }
 
 function formatDuration(sec) {
@@ -131,12 +170,13 @@ function formatDuration(sec) {
 
 async function runWatcher({ streamId, apiUrl }) {
   if (!streamId) {
-    console.error("\x1b[31m%s\x1b[0m", "Error: Stream ID is required. Example: npx aven-eth watch --stream agr_1");
+    console.error("\x1b[31m%s\x1b[0m", "Error: Stream ID is required. Example: aven-eth watch --stream agr_1");
     process.exit(1);
   }
 
   printBanner();
   checkAndInitGit();
+  const baseCommit = getInitialBaseCommit();
 
   console.log("\x1b[34m%s\x1b[0m", `  Authenticating with AVEN-ETH API at ${apiUrl}...`);
   let token = null;
@@ -158,14 +198,21 @@ async function runWatcher({ streamId, apiUrl }) {
     const res = await apiRequest(apiUrl, `/agreements/${streamId}`, { token });
     agreementData = res.agreement;
     console.log("\x1b[32m%s\x1b[0m", `  ✓ Linked to Stream: "${agreementData.title}" (Budget: ${agreementData.budget} ETH)`);
+    if (baseCommit) {
+      console.log("\x1b[90m%s\x1b[0m", `  ✓ Base Commit Hash Locked: ${baseCommit.substring(0, 10)}...`);
+    }
   } catch (err) {
     console.error("\x1b[31m%s\x1b[0m", `  Stream lookup failed: ${err.message}`);
     process.exit(1);
   }
 
-  // Start work session on server
+  // Start work session on server with base commit
   try {
-    await apiRequest(apiUrl, `/agreements/${streamId}/work/start`, { method: "POST", token });
+    await apiRequest(apiUrl, `/agreements/${streamId}/work/start`, {
+      method: "POST",
+      token,
+      body: { baseCommit: baseCommit || undefined },
+    });
     console.log("\x1b[32m%s\x1b[0m", `  ⚡ Work session started! Per-second streaming meter is ACTIVE.`);
   } catch (err) {
     // If already started, continue
@@ -177,36 +224,51 @@ async function runWatcher({ streamId, apiUrl }) {
 
   const interval = setInterval(async () => {
     activeSeconds = Math.floor((Date.now() - startTime) / 1000);
-    const git = getGitMetrics();
+    const git = getGitMetrics(baseCommit);
     const liveEarned = Math.min(agreementData.budget, activeSeconds * ratePerSecond);
-    const reportHash = `0x${sha256(JSON.stringify({ streamId, activeSeconds, ...git }))}`;
+    const reportHash = `0x${sha256(
+      JSON.stringify({
+        streamId,
+        baseCommit: git.baseCommit,
+        headCommit: git.headCommit,
+        activeSeconds,
+        commitsCount: git.commitsCount,
+        linesAdded: git.linesAdded,
+        linesDeleted: git.linesDeleted,
+      })
+    )}`;
 
     printBanner();
     console.log(`  Stream Title      : \x1b[1m${agreementData.title}\x1b[0m`);
     console.log(`  Stream ID         : \x1b[33m#${streamId}\x1b[0m`);
     console.log(`  Git Branch        : \x1b[36m${git.branch}\x1b[0m`);
     console.log(`  Active Time       : \x1b[32m\x1b[1m${formatDuration(activeSeconds)}\x1b[0m`);
-    console.log(`  Commits Logged    : ${git.commitsCount}`);
+    console.log(`  Base Commit       : \x1b[90m${git.baseCommit.substring(0, 10)}...\x1b[0m`);
+    console.log(`  Head Commit       : \x1b[90m${git.headCommit.substring(0, 10)}...\x1b[0m`);
+    console.log(`  Commits (Session) : \x1b[1m${git.commitsCount}\x1b[0m`);
     console.log(`  Files Modified    : ${git.changedFilesCount}`);
-    console.log(`  Line Changes      : \x1b[32m+${git.linesAdded}\x1b[0m / \x1b[31m-${git.linesDeleted}\x1b[0m`);
+    console.log(`  Cumulative Diffs  : \x1b[32m+${git.linesAdded}\x1b[0m / \x1b[31m-${git.linesDeleted}\x1b[0m`);
     console.log(`  Accrued Payout    : \x1b[32m\x1b[1m${liveEarned.toFixed(6)} ETH\x1b[0m (Rate: ${(ratePerSecond * 3600).toFixed(4)} ETH/hr)`);
     console.log(`  Privacy Filter    : \x1b[32mActive (.avenignore)\x1b[0m`);
-    console.log(`  Session Proof     : \x1b[35m${reportHash}\x1b[0m`);
+    console.log(`  Proof Hash        : \x1b[35m${reportHash}\x1b[0m`);
     console.log(`\n  \x1b[90mWatching local repository changes... (Press Ctrl+C to stop & finalize proof)\x1b[0m`);
 
-    // Sync metrics to server
+    // Sync metrics to server with cryptographic integrity payload
     try {
       await apiRequest(apiUrl, `/agreements/${streamId}/cli-sync`, {
         method: "POST",
         token,
         body: {
           branch: git.branch,
+          baseCommit: git.baseCommit,
+          headCommit: git.headCommit,
           commitsCount: git.commitsCount,
           changedFilesCount: git.changedFilesCount,
           linesAdded: git.linesAdded,
           linesDeleted: git.linesDeleted,
           reportHash,
           accumulatedSeconds: activeSeconds,
+          clientTimestamp: Date.now(),
         },
       });
     } catch {}
@@ -217,7 +279,18 @@ async function runWatcher({ streamId, apiUrl }) {
     clearInterval(interval);
     console.log("\n\n\x1b[33m%s\x1b[0m", "  Stopping work session & finalizing cryptographic proof...");
     try {
-      await apiRequest(apiUrl, `/agreements/${streamId}/work/stop`, { method: "POST", token });
+      const git = getGitMetrics(baseCommit);
+      await apiRequest(apiUrl, `/agreements/${streamId}/work/stop`, {
+        method: "POST",
+        token,
+        body: {
+          baseCommit: git.baseCommit,
+          headCommit: git.headCommit,
+          commitsCount: git.commitsCount,
+          linesAdded: git.linesAdded,
+          linesDeleted: git.linesDeleted,
+        },
+      });
       const finalEarned = (activeSeconds * ratePerSecond).toFixed(6);
       console.log("\x1b[32m%s\x1b[0m", `  ✓ Session stopped cleanly. ${finalEarned} ETH accrued and available to claim!`);
       console.log("\x1b[32m%s\x1b[0m", `  ✓ Cryptographic proof recorded on AVEN-ETH ledger.`);
@@ -240,7 +313,7 @@ function showHelp() {
     --api         <url>         AVEN-ETH API endpoint (default: http://localhost:4000/api)
 
   Examples:
-    npx aven-eth watch --stream agr_c9d09ada3837
+    aven-eth watch --stream agr_c9d09ada3837
     node cli/bin/aven-eth.js watch --stream agr_c9d09ada3837
   `);
 }

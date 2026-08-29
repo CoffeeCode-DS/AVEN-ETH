@@ -1,23 +1,40 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import * as seed from "./seed.js";
 import { blockchain, resetBlockchain } from "../services/blockchainService.js";
 
-/**
- * In-memory repository layer.
- *
- * The project is architected so MongoDB is the intended production
- * datastore (see README), but this prototype ships with a dependency-free
- * in-memory fallback so it runs immediately with `npm install && npm run dev`
- * — no database server required. Every method here is what a Mongo-backed
- * repository would expose, so swapping the implementation later doesn't
- * require touching routes or services.
- */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DB_FILE = path.join(__dirname, "db.json");
+
 function deepClone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+let persistenceEnabled = process.env.NODE_ENV !== "test";
+
+function saveToDisk() {
+  if (!persistenceEnabled) return;
+  try {
+    const dump = {
+      users: db.users.all(),
+      agreements: db.agreements.all(),
+      workSessions: db.workSessions.all(),
+      submissions: db.submissions.all(),
+      attestations: db.attestations.all(),
+      transactions: db.transactions.all(),
+      notifications: db.notifications.all(),
+      chain: blockchain.chain,
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(dump, null, 2), "utf8");
+  } catch (err) {
+    // Non-fatal fallback
+  }
+}
+
 class Collection {
   constructor(initial) {
-    this.rows = deepClone(initial);
+    this.rows = deepClone(initial || []);
   }
   all() {
     return deepClone(this.rows);
@@ -34,70 +51,64 @@ class Collection {
   }
   insert(row) {
     this.rows.push(row);
+    saveToDisk();
     return deepClone(row);
   }
   update(id, patch) {
     const idx = this.rows.findIndex((r) => r.id === id);
     if (idx === -1) return null;
     this.rows[idx] = { ...this.rows[idx], ...patch };
+    saveToDisk();
     return deepClone(this.rows[idx]);
   }
 }
 
-// Seed transactions carry only semantic fields (who/what/when/how much).
-// Their blockchain fields (hash, block number, nonce, ...) are produced
-// by actually mining a block for each one, in chronological order, so
-// the Transactions page and the Blockchain page are always looking at
-// the same real chain — never two disconnected sets of fake numbers.
-function buildSeededTransactions() {
-  resetBlockchain();
-  const chronological = [...seed.transactions].sort(
-    (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-  );
-  const byId = {};
-  for (const txn of chronological) {
-    const block = blockchain.mineBlock({
-      type: txn.type,
-      agreementId: txn.agreementId,
-      amount: txn.amount,
-      fromUser: txn.fromUser,
-      toUser: txn.toUser,
-      txId: txn.id,
-      timestamp: txn.timestamp,
-    });
-    byId[txn.id] = {
-      ...txn,
-      simulatedTxHash: `0x${block.hash}`,
-      block: block.blockNumber,
-      previousHash: `0x${block.previousHash}`,
-      nonce: block.nonce,
-      difficulty: block.difficulty,
-      network: "AVEN-ETH Simulation Network",
-      gas: "0.0000",
-    };
+function loadInitialData() {
+  if (persistenceEnabled && fs.existsSync(DB_FILE)) {
+    try {
+      const raw = fs.readFileSync(DB_FILE, "utf8");
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.users)) {
+        if (Array.isArray(parsed.chain) && parsed.chain.length > 0) {
+          blockchain.loadChain(parsed.chain);
+        }
+        return parsed;
+      }
+    } catch {}
   }
-  // Preserve the original seed.js ordering for anything that assumes it.
-  return seed.transactions.map((t) => byId[t.id]);
+  return {
+    users: seed.users,
+    agreements: seed.agreements,
+    workSessions: seed.workSessions,
+    submissions: seed.submissions,
+    attestations: seed.attestations || [],
+    transactions: seed.transactions || [],
+    notifications: seed.notifications || [],
+  };
 }
 
+const initialData = loadInitialData();
+
 export const db = {
-  users: new Collection(seed.users),
-  agreements: new Collection(seed.agreements),
-  workSessions: new Collection(seed.workSessions),
-  submissions: new Collection(seed.submissions),
-  attestations: new Collection(seed.attestations || []),
-  transactions: new Collection(buildSeededTransactions()),
-  notifications: new Collection(seed.notifications),
+  users: new Collection(initialData.users),
+  agreements: new Collection(initialData.agreements),
+  workSessions: new Collection(initialData.workSessions),
+  submissions: new Collection(initialData.submissions),
+  attestations: new Collection(initialData.attestations),
+  transactions: new Collection(initialData.transactions),
+  notifications: new Collection(initialData.notifications),
 };
 
 export function resetDb() {
+  resetBlockchain();
   db.users = new Collection(seed.users);
   db.agreements = new Collection(seed.agreements);
   db.workSessions = new Collection(seed.workSessions);
   db.submissions = new Collection(seed.submissions);
   db.attestations = new Collection(seed.attestations || []);
-  db.transactions = new Collection(buildSeededTransactions());
-  db.notifications = new Collection(seed.notifications);
+  db.transactions = new Collection(seed.transactions || []);
+  db.notifications = new Collection(seed.notifications || []);
+  saveToDisk();
 }
 
 export function publicUser(user) {

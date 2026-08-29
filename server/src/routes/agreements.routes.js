@@ -14,6 +14,8 @@ import {
   approveAndRelease,
   requestRevision,
   rejectSubmission,
+  raiseDispute,
+  resolveDispute,
   computeEarned,
   computeAvailable,
   DomainError,
@@ -184,7 +186,7 @@ router.post("/:id/withdraw", requireRole("FREELANCER"), (req, res) => {
 
 router.post("/:id/work/:action", requireRole("FREELANCER"), (req, res) => {
   handle(res, () => {
-    const session = workAction(req.params.id, req.user.id, req.params.action);
+    const session = workAction(req.params.id, req.user.id, req.params.action, req.body);
     const agreement = db.agreements.findById(req.params.id);
     return { agreement: enrich(agreement), session };
   });
@@ -192,34 +194,70 @@ router.post("/:id/work/:action", requireRole("FREELANCER"), (req, res) => {
 
 router.post("/:id/cli-sync", requireRole("FREELANCER"), (req, res) => {
   handle(res, () => {
-    const { branch, commitsCount, changedFilesCount, linesAdded, linesDeleted, reportHash, accumulatedSeconds } = req.body || {};
+    const { branch, baseCommit, headCommit, commitsCount, changedFilesCount, linesAdded, linesDeleted, reportHash, accumulatedSeconds } = req.body || {};
     const agreement = db.agreements.findById(req.params.id);
     if (!agreement) return res.status(404).json({ error: "Agreement not found." });
+    if (agreement.freelancerId !== req.user.id) return res.status(403).json({ error: "Unauthorized." });
+    if (agreement.status !== "IN_PROGRESS") return res.status(400).json({ error: "Stream is not currently running." });
 
     let session = db.workSessions.findOne((s) => s.agreementId === agreement.id);
-    if (session) {
-      session = db.workSessions.update(session.id, {
-        branch: branch || session.branch,
-        commitsCount: typeof commitsCount === "number" ? commitsCount : session.commitsCount,
-        changedFilesCount: typeof changedFilesCount === "number" ? changedFilesCount : session.changedFilesCount,
-        linesAdded: typeof linesAdded === "number" ? linesAdded : session.linesAdded,
-        linesDeleted: typeof linesDeleted === "number" ? linesDeleted : session.linesDeleted,
-        reportHash: reportHash || session.reportHash,
-        accumulatedSeconds: typeof accumulatedSeconds === "number" ? accumulatedSeconds : session.accumulatedSeconds,
-      });
+    if (!session) return res.status(404).json({ error: "Work session not found." });
+
+    const now = Date.now();
+    const lastSyncTime = session.lastSyncAt ? new Date(session.lastSyncAt).getTime() : (session.startedAt ? new Date(session.startedAt).getTime() : now);
+    const elapsedWallClockSec = Math.max(0, Math.floor((now - lastSyncTime) / 1000));
+    const maxAllowedSeconds = (session.accumulatedSeconds || 0) + elapsedWallClockSec + 3; // 3s jitter grace
+
+    // Enforce monotonic time and cap any fake incoming jumps
+    let verifiedAccumulated = session.accumulatedSeconds || 0;
+    if (typeof accumulatedSeconds === "number" && accumulatedSeconds > 0) {
+      verifiedAccumulated = Math.min(accumulatedSeconds, maxAllowedSeconds);
     }
+
+    // Heuristic bounds against fake metric inflation
+    const maxCommits = Math.max(20, Math.floor(verifiedAccumulated / 20));
+    const maxLines = Math.max(500, verifiedAccumulated * 50);
+
+    const safeCommits = typeof commitsCount === "number" ? Math.min(Math.max(0, commitsCount), maxCommits) : (session.commitsCount || 0);
+    const safeLinesAdded = typeof linesAdded === "number" ? Math.min(Math.max(0, linesAdded), maxLines) : (session.linesAdded || 0);
+    const safeLinesDeleted = typeof linesDeleted === "number" ? Math.min(Math.max(0, linesDeleted), maxLines) : (session.linesDeleted || 0);
+
+    session = db.workSessions.update(session.id, {
+      branch: branch || session.branch,
+      baseCommit: baseCommit || session.baseCommit,
+      headCommit: headCommit || session.headCommit || baseCommit,
+      commitsCount: safeCommits,
+      changedFilesCount: typeof changedFilesCount === "number" ? Math.max(0, changedFilesCount) : session.changedFilesCount,
+      linesAdded: safeLinesAdded,
+      linesDeleted: safeLinesDeleted,
+      reportHash: reportHash || session.reportHash,
+      accumulatedSeconds: verifiedAccumulated,
+      lastSyncAt: new Date().toISOString(),
+    });
+
     return { agreement: enrich(agreement), session };
+  });
+});
+
+router.post("/:id/dispute", requireRole("CLIENT"), (req, res) => {
+  handle(res, () => {
+    const { reason } = req.body || {};
+    const { agreement, transaction } = raiseDispute(req.params.id, req.user.id, reason);
+    return { agreement: enrich(agreement), transaction };
+  });
+});
+
+router.post("/:id/dispute/resolve", requireRole("CLIENT"), (req, res) => {
+  handle(res, () => {
+    const { resolution, clientRefund, workerPayout } = req.body || {};
+    const { agreement } = resolveDispute(req.params.id, req.user.id, { resolution, clientRefund, workerPayout });
+    return { agreement: enrich(agreement) };
   });
 });
 
 router.post("/:id/submit", requireRole("FREELANCER"), (req, res) => {
   handle(res, () => {
-    const { description, deliverables, branch } = req.body || {};
-    const { agreement, submission } = submitWork(req.params.id, req.user.id, {
-      description,
-      deliverables,
-      branch,
-    });
+    const { agreement, submission } = submitWork(req.params.id, req.user.id, req.body || {});
     return { agreement: enrich(agreement), submission };
   });
 });
