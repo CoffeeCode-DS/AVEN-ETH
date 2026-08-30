@@ -9,12 +9,6 @@ const ICONS = {
       <polyline points="9 22 9 12 15 12 15 22" />
     </svg>
   ),
-  wallet: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <rect width="20" height="14" x="2" y="5" rx="2" />
-      <line x1="2" x2="22" y1="10" y2="10" />
-    </svg>
-  ),
   agreements: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -23,16 +17,11 @@ const ICONS = {
       <line x1="16" x2="8" y1="17" y2="17" />
     </svg>
   ),
-  work: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <polyline points="4 17 10 11 4 5" />
-      <line x1="12" x2="20" y1="19" y2="19" />
-    </svg>
-  ),
   attestations: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <circle cx="12" cy="8" r="6" />
-      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+      <path d="m12 15 2 2 4-4" />
+      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
     </svg>
   ),
   reputation: (
@@ -40,24 +29,32 @@ const ICONS = {
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   ),
+  wallet: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
+      <rect width="20" height="14" x="2" y="5" rx="2" />
+      <line x1="2" x2="22" y1="10" y2="10" />
+    </svg>
+  ),
   transactions: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <path d="M7 10v12" />
-      <path d="M15 14v8" />
-      <path d="m3 6 4-4 4 4" />
-      <path d="m11 18 4 4 4-4" />
+      <path d="M8 3 4 7l4 4" />
+      <path d="M4 7h16" />
+      <path d="m16 21 4-4-4-4" />
+      <path d="M20 17H4" />
     </svg>
   ),
   blockchain: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+      <rect width="7" height="7" x="14" y="3" rx="1" />
+      <rect width="7" height="7" x="14" y="14" rx="1" />
+      <rect width="7" height="7" x="3" y="14" rx="1" />
+      <path d="M10 17.5h4" />
+      <path d="M17.5 10v4" />
     </svg>
   ),
   security: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <path d="m9 12 2 2 4-4" />
     </svg>
   ),
   notifications: (
@@ -68,103 +65,87 @@ const ICONS = {
   ),
   profile: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]">
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
+      <circle cx="12" cy="8" r="5" />
+      <path d="M20 21a8 8 0 1 0-16 0" />
     </svg>
   ),
 };
 
-function navItemsFor(role) {
-  const common = [
-    { to: "/dashboard", label: "Overview", icon: ICONS.overview, end: true },
-    { to: "/wallet", label: "Wallet & Funds", icon: ICONS.wallet },
-    { to: "/agreements", label: "Payment Streams", icon: ICONS.agreements },
-  ];
-
-  if (role === "FREELANCER") {
-    common.push({ to: "/work-sessions", label: "Work Sessions", icon: ICONS.work });
-  }
-
-  common.push(
-    { to: "/attestations", label: "Attestations", icon: ICONS.attestations },
-    { to: "/reputation", label: role === "FREELANCER" ? "My Reputation" : "Reputation", icon: ICONS.reputation },
-    { to: "/transactions", label: "Transactions", icon: ICONS.transactions },
-    { to: "/blockchain", label: "Blockchain", icon: ICONS.blockchain },
-    { to: "/security", label: "Security & Proofs", icon: ICONS.security },
-    { to: "/notifications", label: "Notifications", icon: ICONS.notifications },
-    { to: "/profile", label: "Profile", icon: ICONS.profile }
-  );
-
-  return common;
-}
-
 export function SidebarContent({ onNavigate }) {
   const { user, logout } = useAuth();
-  const items = navItemsFor(user?.role || "CLIENT");
+
+  const navItems = [
+    { label: "Overview", to: "/dashboard", icon: ICONS.overview },
+    { label: "Agreements", to: "/agreements", icon: ICONS.agreements },
+    { label: "Attestations", to: "/attestations", icon: ICONS.attestations },
+    { label: "Reputation", to: "/reputation", icon: ICONS.reputation },
+    { label: "Wallet", to: "/wallet", icon: ICONS.wallet },
+    { label: "Transactions", to: "/transactions", icon: ICONS.transactions },
+    { label: "Blockchain", to: "/blockchain", icon: ICONS.blockchain },
+    { label: "Security & Proofs", to: "/security", icon: ICONS.security },
+    { label: "Notifications", to: "/notifications", icon: ICONS.notifications },
+    { label: "Profile", to: "/profile", icon: ICONS.profile },
+  ];
 
   return (
-    <div className="flex flex-col h-full bg-[#000000] text-slate-300 font-sans border-r border-white/[0.08]">
+    <div className="flex flex-col h-full bg-white dark:bg-[#000000] text-slate-700 dark:text-slate-300 font-sans border-r border-slate-200 dark:border-white/[0.08] transition-colors duration-150">
       {/* Brand Header */}
-      <div className="px-5 pt-6 pb-5 flex items-center justify-between border-b border-white/[0.08]">
-        <Link to="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="h-7 w-7 rounded-full bg-[#6366F1] flex items-center justify-center p-1 text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
+      <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08]">
+        <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5 group">
+          <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#6366F1] to-[#818CF8] flex items-center justify-center p-1.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
             <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" />
-              <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" />
+              <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" opacity="0.95" />
+              <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <span className="font-normal text-[20px] tracking-tight text-white lowercase font-sans">aven</span>
+          <span className="font-normal text-[20px] tracking-tight text-slate-900 dark:text-white lowercase">
+            aven<span className="text-[#6366F1] dark:text-[#818CF8]">.eth</span>
+          </span>
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {items.map((item) => (
+      {/* Nav List */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" aria-label="Main Navigation">
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.end}
+            end={item.to === "/dashboard"}
             onClick={onNavigate}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13px] font-normal transition-all ${
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                 isActive
-                  ? "bg-white/[0.1] text-white shadow-sm font-medium"
-                  : "text-slate-400 hover:text-white hover:bg-white/[0.05]"
+                  ? "bg-indigo-50 dark:bg-[#6366F1]/10 text-[#6366F1] dark:text-white font-semibold border-l-2 border-[#6366F1]"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]"
               }`
             }
           >
-            <span className="text-slate-400 group-hover:text-white">{item.icon}</span>
-            <span>{item.label}</span>
+            <span className="shrink-0">{item.icon}</span>
+            <span className="truncate">{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
-      {/* Bottom Network Status Card */}
-      <div className="p-3 mx-3 mb-3 rounded-xl bg-[#0A0A0A] border border-white/[0.08]">
+      {/* Bottom Network Status Bar */}
+      <div className="p-3 mx-3 mb-2 rounded-xl bg-slate-50 dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">ETH LOCALNET</span>
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">ETH LOCALNET</span>
         </div>
-        <p className="text-[11px] text-slate-300 font-mono mt-1 font-medium">Chain ID: 31337 &middot; PoW</p>
-        <Link
-          to="/blockchain"
-          onClick={onNavigate}
-          className="text-[11px] text-[#818CF8] hover:underline mt-2 inline-block font-mono"
-        >
-          Explore ledger &rarr;
-        </Link>
+        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-semibold">ONLINE</span>
       </div>
 
       {/* User Profile Pill at Bottom */}
-      <div className="p-3 border-t border-white/[0.08]">
-        <div className="flex items-center justify-between gap-2.5 p-2 rounded-xl hover:bg-white/[0.04] transition-colors">
+      <div className="p-3 border-t border-slate-200 dark:border-white/[0.08]">
+        <div className="flex items-center justify-between gap-2.5 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-8 w-8 rounded-full bg-[#6366F1] flex items-center justify-center text-xs font-semibold text-white shadow-md flex-shrink-0">
               {user?.avatar || "AV"}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium text-white truncate">{user?.name || "User"}</p>
-              <p className="text-[11px] text-slate-400 truncate">{user?.email || "user@aven.dev"}</p>
+              <p className="text-xs font-medium text-slate-900 dark:text-white truncate">{user?.name || "User"}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || "user@aven.dev"}</p>
             </div>
           </div>
 
@@ -172,7 +153,7 @@ export function SidebarContent({ onNavigate }) {
             onClick={logout}
             aria-label="Sign out"
             title="Sign out"
-            className="text-slate-400 hover:text-rose-400 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors flex-shrink-0"
+            className="text-slate-400 hover:text-rose-500 p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors flex-shrink-0"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -188,7 +169,7 @@ export function SidebarContent({ onNavigate }) {
 
 export default function Sidebar() {
   return (
-    <aside className="hidden lg:flex flex-col w-[240px] shrink-0 bg-[#000000] h-screen sticky top-0 border-r border-white/[0.08] z-40">
+    <aside className="hidden lg:flex flex-col w-[240px] shrink-0 bg-white dark:bg-[#000000] h-screen sticky top-0 border-r border-slate-200 dark:border-white/[0.08] z-40 transition-colors duration-150">
       <SidebarContent />
     </aside>
   );

@@ -44,13 +44,15 @@ export default function Agreements() {
       subtitle={isClient ? "Every agreement you've created, funded, or streamed." : "Every project payment stream assigned to you."}
     >
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-        <div className="flex items-center gap-1.5 bg-[#0A0A0A] border border-white/[0.08] rounded-xl p-1 shadow-lg">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] rounded-xl p-1 shadow-sm dark:shadow-lg">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               onClick={() => setFilter(f.key)}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-colors whitespace-nowrap ${
-                filter === f.key ? "bg-[#6366F1] text-white shadow-sm" : "text-slate-400 hover:text-white"
+                filter === f.key
+                  ? "bg-[#6366F1] text-white shadow-md shadow-indigo-500/25"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
               {f.label}
@@ -71,7 +73,7 @@ export default function Agreements() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400 mb-6">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-500 dark:text-rose-400 mb-6">
           {error}
         </div>
       )}
@@ -79,7 +81,7 @@ export default function Agreements() {
       {!agreements && !error && <LoadingGrid count={6} />}
 
       {agreements && filtered.length === 0 && (
-        <div className="p-12 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
+        <div className="p-12 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl text-center">
           <EmptyState
             title="Nothing here yet"
             message={

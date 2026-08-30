@@ -8,12 +8,12 @@ import Modal from "../components/Modal.jsx";
 import { formatEth, formatDateTime, truncateAddress } from "../utils/format.js";
 
 const TX_BADGES = {
-  WALLET_DEPOSIT: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  WALLET_TRANSFER: "bg-[#6366F1]/15 text-[#818CF8] border-indigo-500/30",
-  STREAM_CREATED: "bg-sky-500/15 text-sky-300 border-sky-500/30",
-  STREAM_CLAIMED: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  ATTESTATION_MINTED: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  STREAM_CANCELLED: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+  WALLET_DEPOSIT: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+  WALLET_TRANSFER: "bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] border-indigo-200 dark:border-indigo-500/30",
+  STREAM_CREATED: "bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-300 border-sky-200 dark:border-sky-500/30",
+  STREAM_CLAIMED: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+  ATTESTATION_MINTED: "bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-500/30",
+  STREAM_CANCELLED: "bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
 };
 
 export default function Wallet() {
@@ -118,7 +118,7 @@ export default function Wallet() {
   if (error || !data) {
     return (
       <AppLayout title="Wallet & Liquidity Hub">
-        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-400">
+        <div className="rounded-xl bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-xs font-mono text-rose-500 dark:text-rose-400">
           Failed to load wallet data: {error}
         </div>
       </AppLayout>
@@ -134,23 +134,23 @@ export default function Wallet() {
     >
       <div className="space-y-8">
         {/* Main Wallet Hero Card */}
-        <div className="p-8 rounded-2xl bg-gradient-to-br from-[#141414] to-[#0A0A0A] border border-white/[0.08] text-white relative overflow-hidden shadow-2xl">
-          <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-[#6366F1]/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl pointer-events-none" />
+        <div className="p-8 rounded-2xl bg-white dark:bg-gradient-to-br dark:from-[#141414] dark:to-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white relative overflow-hidden shadow-sm dark:shadow-2xl">
+          <div className="absolute -top-32 -right-32 h-80 w-80 rounded-full bg-[#6366F1]/10 dark:bg-[#6366F1]/15 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-emerald-500/10 dark:bg-emerald-500/15 blur-3xl pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-8 space-y-4">
               <div className="flex items-center gap-3 flex-wrap">
-                <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 uppercase tracking-wider border border-emerald-500/30">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 uppercase tracking-wider border border-emerald-200 dark:border-emerald-500/30">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   {wallet.network}
                 </span>
 
-                <div className="flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] px-3 py-1 rounded-full text-xs font-mono text-slate-300">
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08] px-3 py-1 rounded-full text-xs font-mono text-slate-700 dark:text-slate-300">
                   <span>{truncateAddress(wallet.walletAddress)}</span>
                   <button
                     onClick={() => copyAddress(wallet.walletAddress)}
-                    className="hover:text-white text-slate-400 transition-colors text-[11px]"
+                    className="hover:text-slate-900 dark:hover:text-white text-slate-500 dark:text-slate-400 transition-colors text-[11px]"
                     title="Copy full address"
                   >
                     {copied ? "Copied" : "Copy"}
@@ -159,11 +159,11 @@ export default function Wallet() {
               </div>
 
               <div>
-                <p className="text-xs font-mono text-slate-400 uppercase tracking-wider">Available Spendable Balance</p>
-                <h2 className="font-mono text-4xl sm:text-5xl font-bold text-white tracking-tight mt-1">
+                <p className="text-xs font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">Available Spendable Balance</p>
+                <h2 className="font-mono text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white tracking-tight mt-1">
                   {formatEth(wallet.availableBalance)}
                 </h2>
-                <p className="text-xs text-slate-400 mt-1.5 font-sans">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-sans">
                   Available for instant stream funding, milestone releases, or transfers.
                 </p>
               </div>
@@ -178,7 +178,7 @@ export default function Wallet() {
                 </button>
                 <button
                   onClick={() => setTransferOpen(true)}
-                  className="h-10 px-5 rounded-xl bg-[#171717] hover:bg-[#1F1F1F] text-slate-200 border border-white/[0.08] font-medium text-xs font-mono tracking-wider uppercase transition-all flex items-center gap-2"
+                  className="h-10 px-5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#171717] dark:hover:bg-[#1F1F1F] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] font-medium text-xs font-mono tracking-wider uppercase transition-all flex items-center gap-2 shadow-sm"
                 >
                   Send / Transfer &rarr;
                 </button>
@@ -186,29 +186,29 @@ export default function Wallet() {
             </div>
 
             {/* Quick Balances Stats Card */}
-            <div className="lg:col-span-4 rounded-2xl bg-[#050505]/80 border border-white/[0.08] p-6 space-y-4 shadow-xl">
-              <p className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider">
+            <div className="lg:col-span-4 rounded-2xl bg-slate-50 dark:bg-[#050505]/80 border border-slate-200 dark:border-white/[0.08] p-6 space-y-4 shadow-sm dark:shadow-xl">
+              <p className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Liquidity Allocations
               </p>
 
               <div className="space-y-3 text-xs font-mono">
-                <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                  <span className="text-slate-400">Locked in Stream Escrows</span>
-                  <span className="font-bold text-amber-400">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-white/[0.06]">
+                  <span className="text-slate-500 dark:text-slate-400">Locked in Stream Escrows</span>
+                  <span className="font-bold text-amber-600 dark:text-amber-400">
                     {formatEth(wallet.lockedInEscrows)}
                   </span>
                 </div>
 
-                <div className="flex justify-between items-center pb-2 border-b border-white/[0.06]">
-                  <span className="text-slate-400">Total Ledger Events</span>
-                  <span className="font-bold text-white">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-white/[0.06]">
+                  <span className="text-slate-500 dark:text-slate-400">Total Ledger Events</span>
+                  <span className="font-bold text-slate-900 dark:text-white">
                     {wallet.totalTransactions} Txns
                   </span>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Account Role</span>
-                  <span className="font-semibold text-[#818CF8] capitalize">
+                  <span className="text-slate-500 dark:text-slate-400">Account Role</span>
+                  <span className="font-semibold text-[#6366F1] dark:text-[#818CF8] capitalize">
                     {wallet.role.toLowerCase()}
                   </span>
                 </div>
@@ -219,32 +219,32 @@ export default function Wallet() {
 
         {/* Active Stream Allocations */}
         {activeStreams.length > 0 && (
-          <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-base text-white">
+              <h3 className="font-semibold text-base text-slate-900 dark:text-white">
                 Active Stream Escrow Vaults ({activeStreams.length})
               </h3>
-              <Link to="/agreements" className="text-xs font-mono text-[#818CF8] hover:underline">
+              <Link to="/agreements" className="text-xs font-mono text-[#6366F1] dark:text-[#818CF8] hover:underline">
                 View All Streams &rarr;
               </Link>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {activeStreams.map((stream) => (
-                <div key={stream.id} className="p-4 rounded-xl bg-[#141414] border border-white/[0.06] space-y-2">
+                <div key={stream.id} className="p-4 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06] space-y-2">
                   <div className="flex justify-between items-start gap-2">
-                    <p className="font-medium text-sm text-white truncate">{stream.title}</p>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#6366F1]/15 text-[#818CF8] border border-indigo-500/30">
+                    <p className="font-semibold text-sm text-slate-900 dark:text-white truncate">{stream.title}</p>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] border border-indigo-200 dark:border-indigo-500/30">
                       {stream.category}
                     </span>
                   </div>
-                  <div className="flex justify-between text-xs text-slate-400 font-mono pt-1 border-t border-white/[0.06]">
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-mono pt-1 border-t border-slate-200 dark:border-white/[0.06]">
                     <span>Locked in Vault:</span>
-                    <strong className="text-white">{formatEth(stream.escrowBalance)}</strong>
+                    <strong className="text-slate-900 dark:text-white">{formatEth(stream.escrowBalance)}</strong>
                   </div>
                   <Link
                     to={`/agreements/${stream.id}`}
-                    className="text-xs text-[#818CF8] font-mono hover:underline block pt-1"
+                    className="text-xs text-[#6366F1] dark:text-[#818CF8] font-mono hover:underline block pt-1"
                   >
                     Open Stream &rarr;
                   </Link>
@@ -255,27 +255,27 @@ export default function Wallet() {
         )}
 
         {/* Complete Wallet Activity History */}
-        <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl space-y-4">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-base text-white">
+              <h3 className="font-semibold text-base text-slate-900 dark:text-white">
                 Wallet Ledger &amp; Transaction History
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Every deposit, stream lock, and withdrawal verified with cryptographic SHA-256 blocks.
               </p>
             </div>
-            <Link to="/blockchain" className="text-xs font-mono text-[#818CF8] hover:underline">
+            <Link to="/blockchain" className="text-xs font-mono text-[#6366F1] dark:text-[#818CF8] hover:underline">
               Inspect Blocks &rarr;
             </Link>
           </div>
 
-          <div className="divide-y divide-white/[0.06]">
+          <div className="divide-y divide-slate-200 dark:divide-white/[0.06]">
             {transactions.length === 0 ? (
-              <p className="text-xs font-mono text-slate-400 py-6 text-center">No transactions recorded yet.</p>
+              <p className="text-xs font-mono text-slate-500 dark:text-slate-400 py-6 text-center">No transactions recorded yet.</p>
             ) : (
               transactions.map((tx) => {
-                const badgeClass = TX_BADGES[tx.type] || "bg-white/[0.08] text-slate-300";
+                const badgeClass = TX_BADGES[tx.type] || "bg-slate-100 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300";
                 const isIncoming = tx.toUser === user.id;
 
                 return (
@@ -285,23 +285,23 @@ export default function Wallet() {
                         <span className={`text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full border ${badgeClass}`}>
                           {tx.type}
                         </span>
-                        <span className="font-mono text-xs text-slate-400">
+                        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
                           {truncateAddress(tx.simulatedTxHash)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-mono">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                         {formatDateTime(tx.timestamp)}
                         {tx.agreementId && (
-                          <span> &middot; Stream: <Link to={`/agreements/${tx.agreementId}`} className="text-[#818CF8] underline">#{tx.agreementId}</Link></span>
+                          <span> &middot; Stream: <Link to={`/agreements/${tx.agreementId}`} className="text-[#6366F1] dark:text-[#818CF8] underline">#{tx.agreementId}</Link></span>
                         )}
                       </p>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className={`font-mono text-base font-bold ${isIncoming ? "text-emerald-400" : "text-white"}`}>
+                      <p className={`font-mono text-base font-bold ${isIncoming ? "text-emerald-600 dark:text-emerald-400" : "text-slate-900 dark:text-white"}`}>
                         {isIncoming ? "+" : "-"}{formatEth(tx.amount)}
                       </p>
-                      <span className="text-[10px] text-slate-500 font-mono">Confirmed</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Confirmed</span>
                     </div>
                   </div>
                 );
@@ -341,7 +341,7 @@ export default function Wallet() {
                   className={`py-2 rounded-xl text-xs font-mono font-semibold border transition-all ${
                     depositAmount === preset
                       ? "bg-[#6366F1] text-white border-[#6366F1]"
-                      : "bg-[#171717] text-slate-300 border-white/[0.08] hover:bg-[#1F1F1F]"
+                      : "bg-slate-100 dark:bg-[#171717] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-[#1F1F1F]"
                   }`}
                 >
                   +{preset} ETH
@@ -365,7 +365,7 @@ export default function Wallet() {
             />
           </div>
 
-          <div className="rounded-xl bg-[#6366F1]/10 border border-indigo-500/25 p-3 text-xs font-mono text-slate-300 leading-relaxed">
+          <div className="rounded-xl bg-indigo-50 dark:bg-[#6366F1]/10 border border-indigo-200 dark:border-indigo-500/25 p-3 text-xs font-mono text-slate-700 dark:text-slate-300 leading-relaxed">
             <strong>Instant Testnet Settlement:</strong> Deposited funds will be credited to {truncateAddress(wallet.walletAddress)} and mined into the blockchain ledger.
           </div>
         </form>
@@ -405,8 +405,8 @@ export default function Wallet() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="field-label !mb-0">Transfer Amount (ETH)</label>
-              <span className="text-xs text-slate-400 font-mono">
-                Available: <strong className="text-white">{formatEth(wallet.availableBalance)}</strong>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                Available: <strong className="text-slate-900 dark:text-white">{formatEth(wallet.availableBalance)}</strong>
               </span>
             </div>
             <input

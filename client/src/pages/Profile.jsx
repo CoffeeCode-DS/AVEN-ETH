@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useToast } from "../context/ToastContext.jsx";
 import { api } from "../api/client.js";
 import { formatEth, truncateAddress, formatDate } from "../utils/format.js";
 
 export default function Profile() {
   const { user, logout } = useAuth();
+  const toast = useToast();
   const [dashboard, setDashboard] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     api.dashboard().then(setDashboard).catch(() => {});
@@ -15,67 +18,87 @@ export default function Profile() {
 
   const isClient = user.role === "CLIENT";
 
+  function copyAddress() {
+    if (!user?.walletAddress) return;
+    navigator.clipboard.writeText(user.walletAddress);
+    setCopied(true);
+    toast.success("Wallet address copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   return (
-    <AppLayout title="Profile & Account" subtitle="Your account credentials, wallet address, and on-chain metrics.">
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-[#6366F1] text-white text-xl font-bold flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
+    <AppLayout
+      title="Profile & Identity"
+      subtitle="Your on-chain cryptographic identity, Ethereum wallet parameters, and reputation metrics."
+    >
+      <div className="grid lg:grid-cols-12 gap-8 items-start">
+        {/* Main Profile Info (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Identity Header Card */}
+          <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-6">
+            <div className="flex items-center gap-5 flex-wrap">
+              <div className="h-16 w-16 rounded-2xl bg-[#6366F1] text-white text-2xl font-bold flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
                 {user.avatar || "AV"}
               </div>
               <div className="min-w-0">
-                <h2 className="text-xl font-medium text-white">{user.name}</h2>
-                <p className="text-xs text-slate-400 mt-0.5 font-mono">{user.title || (isClient ? "Client" : "Freelancer")}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="inline-block text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-[#6366F1]/15 text-[#818CF8] uppercase tracking-wide border border-indigo-500/30">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">{user.name}</h2>
+                  <span className="text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] uppercase tracking-wide border border-indigo-200 dark:border-indigo-500/30">
                     {user.role}
                   </span>
                   {!isClient && (
                     <Link
                       to="/reputation"
-                      className="text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition-colors"
+                      className="text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 transition-colors"
                     >
                       {dashboard?.stats?.reputationScore || 0} Rep Points
                     </Link>
                   )}
                 </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">{user.title || (isClient ? "Engineering Client" : "Smart Contract Engineer")}</p>
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 mt-6 pt-6 border-t border-white/[0.06] font-mono text-xs">
-              <div>
-                <p className="text-slate-500 text-[10px]">Email</p>
-                <p className="font-medium text-slate-200 mt-0.5">{user.email}</p>
+            {/* 4-Bento Parameter Grid */}
+            <div className="grid sm:grid-cols-2 gap-3.5 pt-6 border-t border-slate-200 dark:border-white/[0.06] font-mono text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]">
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Account Email</p>
+                <p className="font-semibold text-slate-900 dark:text-white mt-1 truncate">{user.email}</p>
               </div>
-              <div>
-                <p className="text-slate-500 text-[10px]">Wallet Address</p>
-                <p className="font-medium text-slate-200 mt-0.5">{truncateAddress(user.walletAddress)}</p>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06] flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Ethereum Wallet</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-200 mt-1 truncate">{truncateAddress(user.walletAddress)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyAddress}
+                  className="px-2 py-1 rounded bg-slate-200 dark:bg-white/[0.06] hover:bg-slate-300 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-[11px] font-medium transition-all shrink-0 ml-2"
+                >
+                  {copied ? "Copied" : "Copy"}
+                </button>
               </div>
-              <div>
-                <p className="text-slate-500 text-[10px]">Available Balance</p>
-                <p className="font-bold text-emerald-400 mt-0.5">
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]">
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Available Balance</p>
+                <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm mt-1">
                   {formatEth(dashboard?.stats?.walletBalance ?? 10.0)}
                 </p>
               </div>
-              <div>
-                <p className="text-slate-500 text-[10px]">Member since</p>
-                <p className="font-medium text-slate-200 mt-0.5">{formatDate(user.createdAt)}</p>
+
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]">
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Member Since</p>
+                <p className="font-medium text-slate-800 dark:text-slate-200 mt-1">{formatDate(user.createdAt)}</p>
               </div>
-              {!isClient && (
-                <div>
-                  <p className="text-slate-500 text-[10px]">Hourly Rate</p>
-                  <p className="font-medium text-slate-200 mt-0.5">{formatEth(user.hourlyRate)}/hr</p>
-                </div>
-              )}
             </div>
 
-            {!isClient && user.skills && (
-              <div className="mt-6 pt-6 border-t border-white/[0.06]">
-                <p className="text-xs text-slate-400 mb-2.5 font-mono">Skills</p>
-                <div className="flex flex-wrap gap-2">
+            {!isClient && user.skills && user.skills.length > 0 && (
+              <div className="pt-6 border-t border-slate-200 dark:border-white/[0.06]">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 font-mono">Verified Engineering Competencies</p>
+                <div className="flex flex-wrap gap-2 font-mono text-xs">
                   {user.skills.map((s) => (
-                    <span key={s} className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/[0.05] border border-white/[0.08] text-slate-300">
+                    <span key={s} className="px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300">
                       {s}
                     </span>
                   ))}
@@ -84,62 +107,78 @@ export default function Profile() {
             )}
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-indigo-500/25 shadow-xl">
-            <p className="font-medium text-white text-sm mb-1">AVEN On-Chain Protocol</p>
-            <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Every payment stream, time-tracked contribution, and client rating automatically produces cryptographic proof-of-work hashes and permanent EAS attestations recorded on the local blockchain ledger.
+          {/* Cryptographic Protocol Notice */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-indigo-200 dark:border-indigo-500/25 shadow-sm dark:shadow-2xl space-y-2">
+            <div className="flex items-center gap-2 text-xs font-mono text-[#6366F1] dark:text-[#818CF8]">
+              <span className="h-2 w-2 rounded-full bg-[#6366F1] animate-pulse" />
+              <span>AVEN-ETH Consensus Identity Active</span>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
+              All payment stream contracts, time-tracked contribution sessions, Git commit diffs, and EAS skill attestations are permanently anchored to your wallet address: <strong className="font-mono text-slate-900 dark:text-white">{truncateAddress(user.walletAddress)}</strong>.
             </p>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
-            <p className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider mb-3">Quick Metrics</p>
+        {/* Right Column (4 cols): Quick Metrics & Actions */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-4">
+            <p className="text-xs font-mono font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              On-Chain Activity Metrics
+            </p>
             {dashboard ? (
-              <dl className="space-y-3 text-xs font-mono">
-                <div className="flex justify-between pb-2 border-b border-white/[0.06]">
-                  <dt className="text-slate-400">Active Streams</dt>
-                  <dd className="font-medium text-white">{dashboard.stats.activeProjects}</dd>
+              <div className="space-y-3 text-xs font-mono">
+                <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                  <span className="text-slate-500 dark:text-slate-400">Active Streams:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{dashboard.stats.activeProjects}</span>
                 </div>
                 {isClient ? (
                   <>
-                    <div className="flex justify-between pb-2 border-b border-white/[0.06]">
-                      <dt className="text-slate-400">Locked in Escrow</dt>
-                      <dd className="font-bold text-amber-400">{formatEth(dashboard.stats.lockedInEscrow)}</dd>
+                    <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                      <span className="text-slate-500 dark:text-slate-400">Locked in Escrow:</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">{formatEth(dashboard.stats.lockedInEscrow)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <dt className="text-slate-400">Released Streamed</dt>
-                      <dd className="font-bold text-emerald-400">{formatEth(dashboard.stats.released)}</dd>
+                    <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                      <span className="text-slate-500 dark:text-slate-400">Released / Paid:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatEth(dashboard.stats.released)}</span>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="flex justify-between pb-2 border-b border-white/[0.06]">
-                      <dt className="text-slate-400">Claimable Now</dt>
-                      <dd className="font-bold text-emerald-400">{formatEth(dashboard.stats.claimableStreamBalance || 0)}</dd>
+                    <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                      <span className="text-slate-500 dark:text-slate-400">Claimable Now:</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatEth(dashboard.stats.claimableStreamBalance || 0)}</span>
                     </div>
-                    <div className="flex justify-between pb-2 border-b border-white/[0.06]">
-                      <dt className="text-slate-400">Total Settled</dt>
-                      <dd className="font-bold text-white">{formatEth(dashboard.stats.totalEarned)}</dd>
+                    <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                      <span className="text-slate-500 dark:text-slate-400">Total Settled:</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{formatEth(dashboard.stats.totalEarned)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <dt className="text-slate-400">Reputation Score</dt>
-                      <dd className="font-bold text-[#818CF8]">{dashboard.stats.reputationScore || 0} pts</dd>
+                    <div className="flex justify-between p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04]">
+                      <span className="text-slate-500 dark:text-slate-400">Reputation:</span>
+                      <span className="font-bold text-[#6366F1] dark:text-[#818CF8]">{dashboard.stats.reputationScore || 0} pts</span>
                     </div>
                   </>
                 )}
-              </dl>
+              </div>
             ) : (
-              <div className="skeleton h-20 w-full rounded-xl" />
+              <div className="skeleton h-32 w-full rounded-xl" />
             )}
           </div>
 
-          <button
-            onClick={logout}
-            className="w-full h-10 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 font-mono text-xs font-medium uppercase transition-all shadow-md"
-          >
-            Log Out
-          </button>
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-3 font-mono">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Account Actions</p>
+            <Link
+              to="/wallet"
+              className="w-full h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#141414] text-slate-800 dark:text-slate-200 dark:hover:bg-[#1F1F1F] dark:hover:text-white border border-slate-200 dark:border-white/[0.08] text-xs font-medium uppercase tracking-wider transition-all flex items-center justify-center shadow-sm"
+            >
+              Manage Wallet &amp; Vault Funds &rarr;
+            </Link>
+            <button
+              onClick={logout}
+              className="w-full h-10 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/25 text-xs font-medium uppercase tracking-wider transition-all"
+            >
+              Sign Out Account
+            </button>
+          </div>
         </div>
       </div>
     </AppLayout>
