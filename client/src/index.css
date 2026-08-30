@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -14,13 +10,36 @@ html,
 body,
 #root {
   height: 100%;
+}
+
+/* Dark mode baseline */
+html.dark,
+html.dark body,
+html.dark #root {
   background-color: #000000;
+  color: #F8FAFC;
+}
+
+/* Light mode baseline */
+html.light,
+html.light body,
+html.light #root {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+/* Also handle when neither class is present (fallback = dark) */
+html:not(.light) body,
+html:not(.light) #root {
+  background-color: #000000;
+  color: #F8FAFC;
 }
 
 body {
-  @apply bg-paper text-ink-900 antialiased;
-  font-family: "Inter", sans-serif;
+  @apply antialiased;
+  font-family: "Inter", "Geist", sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 h1,
@@ -28,13 +47,13 @@ h2,
 h3,
 h4,
 .font-display {
-  font-family: "'Geist'", "'Inter'", sans-serif;
+  font-family: "Geist", "Inter", sans-serif;
   letter-spacing: -0.01em;
 }
 
 .font-tabular {
   font-variant-numeric: tabular-nums;
-  font-family: "'JetBrains Mono'", monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 /* Visible keyboard focus everywhere */
@@ -68,58 +87,43 @@ select:focus-visible,
 ::-webkit-scrollbar-track {
   background: #000000;
 }
+html.light ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
 ::-webkit-scrollbar-thumb {
   background: #222222;
   border-radius: 999px;
   border: 2px solid #000000;
 }
+html.light ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-color: #F1F5F9;
+}
 ::-webkit-scrollbar-thumb:hover {
   background: #333333;
 }
-
-/* Escrow flow pulse */
-.escrow-line {
-  position: relative;
-  height: 2px;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.15) 0,
-    rgba(255, 255, 255, 0.15) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-}
-.escrow-line--active {
-  background: #6366F1;
-}
-.escrow-pulse {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #6366F1;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.25);
-  transform: translate(-50%, -50%);
-  offset-path: path("M0,0 L100,0");
-  animation: pulseTravel 1.6s ease-in-out infinite;
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
-@keyframes pulseTravel {
+/* Escrow continuous smooth infinite conveyor stream */
+.stream-track-mask {
+  mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 12%, black 88%, transparent 100%);
+}
+
+.stream-conveyor-continuous {
+  display: flex;
+  width: 200%;
+  animation: continuousStreamToRight 3s linear infinite;
+}
+
+@keyframes continuousStreamToRight {
   0% {
-    left: 0%;
-    opacity: 0;
-  }
-  12% {
-    opacity: 1;
-  }
-  88% {
-    opacity: 1;
+    transform: translateX(-50%);
   }
   100% {
-    left: 100%;
-    opacity: 0;
+    transform: translateX(0%);
   }
 }
 
@@ -129,9 +133,13 @@ select:focus-visible,
     background-size: 400px 100%;
     @apply animate-shimmer rounded-md;
   }
+  html.light .skeleton {
+    background: linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 37%, #F1F5F9 63%);
+    background-size: 400px 100%;
+  }
 
   .card {
-    @apply bg-[#0A0A0A] border border-white/[0.08] rounded-2xl shadow-2xl;
+    @apply bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] rounded-2xl shadow-sm dark:shadow-2xl text-slate-900 dark:text-white;
   }
 
   .btn {
@@ -141,31 +149,31 @@ select:focus-visible,
     @apply btn bg-[#6366F1] text-white px-4 py-2.5 hover:bg-[#5558E6] active:bg-[#4F46E5] shadow-lg shadow-indigo-500/25;
   }
   .btn-secondary {
-    @apply btn bg-[#141414] text-slate-200 border border-white/[0.08] px-4 py-2.5 hover:bg-[#1F1F1F] hover:text-white active:bg-[#0A0A0A];
+    @apply btn bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 dark:bg-[#141414] dark:text-slate-200 dark:border-white/[0.08] px-4 py-2.5 dark:hover:bg-[#1F1F1F] dark:hover:text-white active:bg-slate-300 dark:active:bg-[#0A0A0A];
   }
   .btn-success {
     @apply btn bg-[#10B981] text-white px-4 py-2.5 hover:bg-[#059669] shadow-sm;
   }
   .btn-danger {
-    @apply btn bg-[#F43F5E]/15 text-[#F43F5E] border border-[#F43F5E]/30 px-4 py-2.5 hover:bg-[#F43F5E]/25;
+    @apply btn bg-rose-50 dark:bg-[#F43F5E]/15 text-rose-600 dark:text-[#F43F5E] border border-rose-200 dark:border-[#F43F5E]/30 px-4 py-2.5 hover:bg-rose-100 dark:hover:bg-[#F43F5E]/25;
   }
   .btn-ghost {
-    @apply btn text-slate-400 px-3 py-2 hover:bg-white/[0.06] hover:text-white;
+    @apply btn text-slate-500 dark:text-slate-400 px-3 py-2 hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-900 dark:hover:text-white;
   }
   .btn-sm {
     @apply !px-3 !py-1.5 text-xs;
   }
 
   .input {
-    @apply w-full rounded-xl border border-white/[0.08] bg-[#121212] px-3.5 py-2.5 text-[14px] text-white placeholder:text-slate-500 transition-colors focus:border-[#6366F1] focus:outline-none focus:ring-1 focus:ring-[#6366F1];
+    @apply w-full rounded-xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-[#121212] px-3.5 py-2.5 text-[14px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-colors focus:border-[#6366F1] focus:outline-none focus:ring-1 focus:ring-[#6366F1];
   }
   .input-error {
     @apply border-rose-500 focus:border-rose-500 focus:ring-rose-500/20;
   }
   .field-label {
-    @apply block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5;
+    @apply block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5;
   }
   .field-error {
-    @apply mt-1.5 text-xs text-rose-400 font-mono;
+    @apply mt-1.5 text-xs text-rose-500 dark:text-rose-400 font-mono;
   }
 }

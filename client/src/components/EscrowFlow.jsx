@@ -1,35 +1,95 @@
-function Node({ label, sub, active }) {
+function Node({ label, sub, active, isVault }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 text-center w-24">
+    <div className="flex flex-col items-center gap-1.5 text-center w-28 shrink-0">
       <div
-        className={`h-11 w-11 rounded-full flex items-center justify-center text-xs font-mono font-bold border-2 transition-all ${
-          active ? "border-[#6366F1] text-white bg-[#6366F1]/20 shadow-lg shadow-indigo-500/30" : "border-white/[0.1] text-slate-400 bg-[#141414]"
+        className={`h-12 w-12 rounded-xl flex items-center justify-center text-xs font-mono font-bold border transition-all ${
+          active
+            ? isVault
+              ? "border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 shadow-lg shadow-emerald-500/15"
+              : "border-[#6366F1] text-[#6366F1] dark:text-white bg-indigo-50 dark:bg-[#6366F1]/20 shadow-lg shadow-indigo-500/20"
+            : "border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-[#141414]"
         }`}
       >
-        {label}
+        {isVault ? (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5 text-emerald-600 dark:text-emerald-400">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        ) : (
+          label
+        )}
       </div>
-      <span className="text-[11px] font-mono text-slate-400 leading-tight truncate max-w-[90px]">{sub}</span>
+      <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 font-medium leading-tight truncate max-w-[100px]">{sub}</span>
     </div>
   );
 }
 
-export default function EscrowFlow({ fromLabel, fromName, toLabel, toName, amount, active = false }) {
+function StreamArrow() {
   return (
-    <div className="flex items-center justify-center gap-3 py-2">
+    <div className="flex items-center text-[#6366F1] dark:text-[#818CF8] shrink-0 drop-shadow-[0_0_8px_rgba(99,102,241,0.9)]">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-4 h-4 text-[#6366F1] dark:text-[#818CF8]"
+      >
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <polyline points="13 5 20 12 13 19" />
+      </svg>
+    </div>
+  );
+}
+
+function ArrowConnector({ amount, active }) {
+  return (
+    <div className="flex-1 min-w-[130px] max-w-[220px] flex flex-col items-center gap-2 font-mono">
+      <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-[#141414] px-3 py-0.5 rounded-full border border-slate-200 dark:border-white/[0.08] shadow-sm whitespace-nowrap">
+        {amount}
+      </span>
+      
+      {/* 100% Smooth Continuous Infinite Stream Conveyor */}
+      <div className="relative w-full h-6 flex items-center justify-center overflow-hidden stream-track-mask">
+        {/* Base Track Line */}
+        <div className="w-full h-[2px] bg-slate-200 dark:bg-white/[0.1] rounded-full absolute inset-x-0 top-1/2 -translate-y-1/2" />
+
+        {active ? (
+          <div className="absolute inset-0 flex items-center stream-conveyor-continuous pointer-events-none">
+            {/* Group 1 */}
+            <div className="flex items-center justify-around w-1/2 px-2 shrink-0">
+              <StreamArrow />
+              <StreamArrow />
+              <StreamArrow />
+            </div>
+
+            {/* Group 2 (Identical clone for 60fps unbroken infinite continuous flow) */}
+            <div className="flex items-center justify-around w-1/2 px-2 shrink-0">
+              <StreamArrow />
+              <StreamArrow />
+              <StreamArrow />
+            </div>
+          </div>
+        ) : (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function EscrowFlow({ fromLabel, fromName, toLabel, toName, amount, active = true }) {
+  return (
+    <div className="flex items-center justify-between gap-2 sm:gap-4 py-3.5 px-3 sm:px-6 bg-white dark:bg-[#0A0A0A] rounded-2xl border border-slate-200 dark:border-white/[0.06] overflow-x-auto shadow-sm dark:shadow-none">
       <Node label={fromLabel} sub={fromName} active={active} />
-      <div className="flex-1 max-w-[120px] flex flex-col items-center gap-1.5 font-mono text-xs">
-        <span className="text-slate-300 font-semibold whitespace-nowrap">{amount}</span>
-        <div className={`escrow-line w-full ${active ? "escrow-line--active" : ""}`}>
-          {active && <span className="escrow-pulse" />}
-        </div>
-      </div>
-      <Node label="VAULT" sub="Stream Vault" active={active} />
-      <div className="flex-1 max-w-[120px] flex flex-col items-center gap-1.5 font-mono text-xs">
-        <span className="text-slate-300 font-semibold whitespace-nowrap">{amount}</span>
-        <div className={`escrow-line w-full ${active ? "escrow-line--active" : ""}`}>
-          {active && <span className="escrow-pulse" />}
-        </div>
-      </div>
+      <ArrowConnector amount={amount} active={active} />
+      <Node label="VAULT" sub="Smart Vault" active={active} isVault />
+      <ArrowConnector amount={amount} active={active} />
       <Node label={toLabel} sub={toName} active={active} />
     </div>
   );

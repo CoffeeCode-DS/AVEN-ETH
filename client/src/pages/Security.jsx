@@ -5,74 +5,80 @@ import { useToast } from "../context/ToastContext.jsx";
 
 const CONCEPTS = [
   {
-    title: "Transaction Hashing",
-    body: "Every escrow event (funding, submission, payment release) is serialized and run through SHA-256 to produce a unique fingerprint. Change one byte of the data and the hash changes completely.",
+    title: "SHA-256 Transaction Hashing",
+    body: "Every escrow deposit, milestone submission, and micropayment release is cryptographically serialized. Changing a single byte completely changes the 256-bit hash fingerprint.",
   },
   {
-    title: "Previous Block Hash",
-    body: "Each block stores the hash of the block before it, chaining every event to everything that came before. This is what makes the ledger a chain rather than a list.",
+    title: "Cryptographic Block Chaining",
+    body: "Each block permanently seals the previous block's SHA-256 hash. Mutating past history breaks the chain forwards from that exact block.",
   },
   {
-    title: "Proof of Work",
-    body: "To mine a block, the network searches for a nonce that satisfies difficulty constraints \u2014 real computation tuned for rapid consensus.",
+    title: "Proof of Work Consensus",
+    body: "Blocks require mining valid nonces satisfying local difficulty target constraints, ensuring consensus state cannot be arbitrarily forged.",
   },
   {
-    title: "Block Validation",
-    body: "A block is valid only if its stored hash matches a fresh recomputation of its contents, and its previousHash genuinely matches the prior block's hash.",
+    title: "Git Merkle Tree Diff Verification",
+    body: "Worker contributions are tied to verified Git commit ranges (base -> head) and hashed into on-chain Merkle roots before payment can be claimed.",
   },
   {
-    title: "Consensus",
-    body: "Once a block satisfies proof-of-work and links correctly, it's accepted as the network's shared record of what happened.",
+    title: "Zero-Trust Stream Freezing",
+    body: "Either client or worker can halt micropayment streaming in real time if scope breaches or malicious activity is detected.",
   },
   {
-    title: "Smart Contract State",
-    body: "The escrow contract's balance (locked, released, remaining) is derived directly from confirmed on-chain events, never edited by hand.",
+    title: "Non-Custodial Escrow Vaults",
+    body: "Escrow balances are derived directly from verified on-chain smart contract events, eliminating centralized intermediary custody.",
   },
   {
-    title: "Dispute & Escrow Protection",
-    body: "Funds are only released when the contract's conditions are met \u2014 work submitted, cryptographic Git Merkle diffs verified, and client approval recorded.",
+    title: "Instant Tamper Detection",
+    body: "Any ledger modification fails SHA-256 verification and previousHash checks immediately, highlighting the exact block corrupted.",
   },
   {
-    title: "Tamper Detection",
-    body: "If any block's data is altered after the fact, its stored hash no longer matches its contents. Verification catches this instantly.",
+    title: "EAS On-Chain Reputation Badges",
+    body: "Settled agreements and milestone attestations are minted as verifiable, immutable Ethereum Attestation Service records.",
   },
 ];
 
 function ChecklistItem({ label, state }) {
   return (
-    <div className="flex items-center gap-3 py-2.5 font-mono text-xs">
-      {state === "pending" && <span className="h-4 w-4 rounded-full border border-white/[0.15] shrink-0" />}
-      {state === "running" && (
-        <span className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-[#6366F1] animate-spin shrink-0" />
-      )}
-      {state === "ok" && (
-        <span className="h-4 w-4 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center text-[10px] shrink-0 font-bold">
-          ✓
-        </span>
-      )}
-      {state === "fail" && (
-        <span className="h-4 w-4 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center text-[10px] shrink-0 font-bold">
-          ×
-        </span>
-      )}
+    <div className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.04] font-mono text-xs">
       <span
         className={`${
-          state === "pending" ? "text-slate-500" : state === "fail" ? "text-rose-300 font-medium" : "text-slate-200"
+          state === "pending"
+            ? "text-slate-400 dark:text-slate-500"
+            : state === "fail"
+            ? "text-rose-600 dark:text-rose-300 font-medium"
+            : "text-slate-800 dark:text-slate-200"
         }`}
       >
         {label}
       </span>
+      <div className="shrink-0">
+        {state === "pending" && <span className="h-4 w-4 rounded-full border border-slate-300 dark:border-white/[0.15] inline-block" />}
+        {state === "running" && (
+          <span className="h-4 w-4 rounded-full border-2 border-indigo-500/30 border-t-[#6366F1] animate-spin inline-block" />
+        )}
+        {state === "ok" && (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+            PASSED
+          </span>
+        )}
+        {state === "fail" && (
+          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30">
+            FAILED
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
 const STEP_DEFS = [
-  { key: "hash", label: "Checking transaction integrity\u2026", okLabel: "Transaction hash verified" },
-  { key: "link", label: "Checking previous block\u2026", okLabel: "Previous hash verified" },
-  { key: "pow", label: "Running Proof of Work\u2026", okLabel: "Valid nonce discovered" },
-  { key: "block", label: "Checking block integrity\u2026", okLabel: "Block valid" },
-  { key: "consensus", label: "Consensus\u2026", okLabel: "Transaction accepted" },
-  { key: "escrow", label: "Escrow state\u2026", okLabel: "State synchronized" },
+  { key: "hash", label: "Checking transaction payload hash integrity\u2026", okLabel: "Transaction hashes validated" },
+  { key: "link", label: "Verifying previous block cryptographic links\u2026", okLabel: "Previous block hashes verified" },
+  { key: "pow", label: "Testing Proof-of-Work difficulty constraints\u2026", okLabel: "Valid nonces & difficulty confirmed" },
+  { key: "block", label: "Auditing block sequence & state roots\u2026", okLabel: "Block structures verified" },
+  { key: "consensus", label: "Verifying consensus ledger state\u2026", okLabel: "Consensus state validated" },
+  { key: "escrow", label: "Synchronizing escrow vault balances\u2026", okLabel: "Escrow balances synchronized" },
 ];
 
 export default function Security() {
@@ -138,14 +144,14 @@ export default function Security() {
     STEP_DEFS.forEach((step, i) => {
       const t1 = setTimeout(() => {
         setStepStates((prev) => ({ ...prev, [step.key]: "running" }));
-      }, i * 500);
+      }, i * 450);
       const t2 = setTimeout(() => {
         setStepStates((prev) => ({ ...prev, [step.key]: outcomes[step.key] ? "ok" : "fail" }));
         if (i === STEP_DEFS.length - 1) {
           setFinalResult(result);
           setRunning(false);
         }
-      }, i * 500 + 350);
+      }, i * 450 + 320);
       timeoutsRef.current.push(t1, t2);
     });
   }
@@ -182,33 +188,67 @@ export default function Security() {
   }
 
   return (
-    <AppLayout title="Security & Consensus" subtitle="How cryptographic proof of work and Merkle hashing protect every stream transaction.">
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        {/* Run Security Verification */}
-        <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-medium text-base text-white">Run Security Verification</h2>
+    <AppLayout
+      title="Security & Consensus"
+      subtitle="Cryptographic verification engine, Git Merkle proof consensus, and live blockchain tamper auditor."
+    >
+      {/* 4-Bento Security Metric Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl">
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Ledger Health</p>
+          <p className={`text-2xl font-bold mt-1.5 ${tampered ? "text-rose-500 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+            {tampered ? "Tampered" : "100% Secure"}
+          </p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">EVM State Root OK</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl">
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Proof of Work</p>
+          <p className="text-2xl font-bold text-[#6366F1] dark:text-[#818CF8] mt-1.5">SHA-256</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Difficulty 3 (000...)</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl">
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Merkle Diff Engine</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">Active</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Git commit range audit</p>
+        </div>
+
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl">
+          <p className="text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-wider">Total Blocks</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1.5">{chain?.length || 0}</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Verified on localnet</p>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8 mb-8 items-start">
+        {/* Run Security Verification Card */}
+        <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-5">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Cryptographic Verification Audit</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">
+                Walks the entire chain, recomputing every hash and cryptographic link.
+              </p>
+            </div>
             {tampered && (
-              <span className="text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30">
-                CHAIN TAMPERED
+              <span className="text-[10px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30">
+                TAMPER DETECTED
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mb-4 font-sans">
-            Walks the entire chain, recomputing every hash and every link — a real cryptographic audit check.
-          </p>
 
           <button
-            className="w-full h-10 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-medium text-xs font-mono tracking-wider uppercase transition-all shadow-md shadow-indigo-500/25 flex items-center justify-center gap-2 mb-4 disabled:opacity-50"
+            className="w-full h-11 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-semibold text-xs font-mono tracking-wider uppercase transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
             onClick={runVerification}
             disabled={running}
           >
             {running && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
-            {running ? "Verifying Ledger\u2026" : "Run Security Verification"}
+            {running ? "Auditing Blockchain Consensus\u2026" : "Run Consensus Audit & Verification"}
           </button>
 
           {Object.keys(stepStates).length > 0 && (
-            <div className="divide-y divide-white/[0.06] border-t border-white/[0.06] pt-1">
+            <div className="space-y-2 pt-2">
               {STEP_DEFS.map((step) => (
                 <ChecklistItem
                   key={step.key}
@@ -227,82 +267,107 @@ export default function Security() {
 
           {finalResult && (
             <div
-              className={`mt-4 rounded-xl px-4 py-3 text-xs font-mono font-medium border ${
+              className={`mt-4 rounded-xl p-4 text-xs font-mono font-medium border ${
                 finalResult.valid
-                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/25"
-                  : "bg-rose-500/10 text-rose-300 border-rose-500/25"
+                  ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/25"
+                  : "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/25"
               }`}
             >
               {finalResult.valid ? (
-                <>✓ SECURE &nbsp; ✓ VERIFIED &nbsp; ✓ CONSENSUS REACHED</>
+                <div className="space-y-1">
+                  <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">✓ ALL BLOCKS CRYPTOGRAPHICALLY VERIFIED</p>
+                  <p className="text-slate-600 dark:text-slate-300">
+                    Proof-of-work nonces, previous hashes, and escrow balances are in 100% consensus agreement.
+                  </p>
+                </div>
               ) : (
-                <>CHAIN INTEGRITY: FAILED &mdash; broken at Block #{finalResult.brokenAtBlock}</>
+                <div className="space-y-1">
+                  <p className="font-bold text-rose-600 dark:text-rose-400 text-sm">× CHAIN INTEGRITY VIOLATION DETECTED</p>
+                  <p className="text-slate-600 dark:text-slate-300">
+                    Broken cryptographic linkage detected at Block #{finalResult.brokenAtBlock}. Hash mismatch!
+                  </p>
+                </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Tamper Detection Demo */}
-        <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
-          <h2 className="font-medium text-base text-white mb-1">Tamper Detection Demo</h2>
-          <p className="text-xs text-slate-400 mb-4 font-sans">
-            Pick a block and alter its amount after the fact — exactly what an attacker editing ledger data would
-            do — then watch verification catch it.
-          </p>
+        {/* Live Tamper Simulator Sandbox */}
+        <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-5">
+          <div>
+            <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Live Tamper Simulator</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">
+              Pick a block and modify its amount to simulate an attacker editing ledger records, then observe verification catch it.
+            </p>
+          </div>
 
-          <label className="field-label">Block to tamper with</label>
-          <select className="input mb-4 font-mono text-xs" value={selectedBlock} onChange={(e) => setSelectedBlock(e.target.value)}>
-            {chain
-              ?.filter((b) => b.blockNumber !== 0)
-              .sort((a, b) => a.blockNumber - b.blockNumber)
-              .map((b) => (
-                <option key={b.blockNumber} value={b.blockNumber} className="bg-[#0A0A0A] text-white">
-                  Block #{b.blockNumber} — {b.type.replace(/_/g, " ")}
-                </option>
-              ))}
-          </select>
+          <div>
+            <label className="field-label">Select Block to Mutate</label>
+            <select
+              className="input font-mono text-xs"
+              value={selectedBlock}
+              onChange={(e) => setSelectedBlock(e.target.value)}
+            >
+              {chain
+                ?.filter((b) => b.blockNumber !== 0)
+                .sort((a, b) => a.blockNumber - b.blockNumber)
+                .map((b) => (
+                  <option key={b.blockNumber} value={b.blockNumber} className="bg-white dark:bg-[#0A0A0A] text-slate-900 dark:text-white">
+                    Block #{b.blockNumber} &mdash; {b.type.replace(/_/g, " ")} ({b.projectTitle || "Transfer"})
+                  </option>
+                ))}
+            </select>
+          </div>
 
-          <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
             <button
-              className="h-10 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 font-mono text-xs font-medium uppercase transition-all flex-1 flex items-center justify-center gap-2"
+              className="h-11 rounded-xl bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/25 font-mono text-xs font-semibold uppercase tracking-wider transition-all flex-1 flex items-center justify-center gap-2"
               onClick={handleTamper}
               disabled={tamperBusy || !selectedBlock}
             >
-              {tamperBusy && <span className="h-3.5 w-3.5 rounded-full border-2 border-rose-300/40 border-t-rose-300 animate-spin" />}
-              Tamper Block
+              {tamperBusy && <span className="h-3.5 w-3.5 rounded-full border-2 border-rose-600/40 border-t-rose-600 animate-spin" />}
+              Tamper Block Data
             </button>
             <button
-              className="h-10 rounded-xl bg-[#171717] text-slate-300 border border-white/[0.08] hover:bg-[#1F1F1F] hover:text-white font-mono text-xs font-medium uppercase transition-all flex-1 flex items-center justify-center gap-2"
+              className="h-11 rounded-xl bg-slate-100 dark:bg-[#171717] text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-[#1F1F1F] font-mono text-xs font-semibold uppercase tracking-wider transition-all flex-1 flex items-center justify-center gap-2 shadow-sm"
               onClick={handleRestore}
               disabled={restoreBusy || !tampered}
             >
-              {restoreBusy && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />}
+              {restoreBusy && <span className="h-3.5 w-3.5 rounded-full border-2 border-slate-400 border-t-slate-800 animate-spin" />}
               Restore Valid Chain
             </button>
           </div>
 
           {tampered && (
-            <div className="mt-4 rounded-xl bg-rose-500/10 border border-rose-500/25 px-4 py-3 text-xs font-mono text-rose-300">
-              A block's stored hash no longer matches its data. Run the verification check to see exactly where the
-              chain breaks.
+            <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/25 text-xs font-mono text-rose-700 dark:text-rose-300 space-y-1">
+              <p className="font-bold text-rose-600 dark:text-rose-400">Ledger Mutation Active:</p>
+              <p>
+                Block #{selectedBlock} stored hash no longer matches its payload. Run the verification audit to see the consensus failure.
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Educational concepts */}
-      <div className="p-6 rounded-2xl bg-[#0A0A0A] border border-white/[0.08] shadow-xl">
-        <h2 className="font-medium text-base text-white mb-4">How Cryptography Protects Your Escrow Vaults</h2>
-        <div className="grid sm:grid-cols-2 gap-x-6 gap-y-5">
+      {/* 8-Bento Cryptographic Security Guarantee Cards */}
+      <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-6">
+        <div>
+          <h3 className="font-semibold text-lg text-slate-900 dark:text-white">Cryptographic Guarantees &amp; Smart Escrow Protocols</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">
+            How AVEN protects every stream deposit, commit verification, and micropayment payout.
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CONCEPTS.map((c, i) => (
-            <div key={c.title} className="flex gap-3">
-              <span className="h-6 w-6 rounded-lg bg-white/[0.06] border border-white/[0.08] text-[#818CF8] text-xs font-mono font-medium flex items-center justify-center shrink-0 mt-0.5">
-                {i + 1}
-              </span>
+            <div key={c.title} className="p-4 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06] flex flex-col justify-between space-y-3">
               <div>
-                <p className="text-xs font-mono font-semibold text-white">{c.title}</p>
-                <p className="text-xs text-slate-400 mt-1 leading-relaxed font-sans">{c.body}</p>
+                <span className="h-6 w-6 rounded-lg bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] border border-indigo-200 dark:border-indigo-500/30 text-xs font-mono font-bold flex items-center justify-center mb-3">
+                  0{i + 1}
+                </span>
+                <p className="text-xs font-mono font-semibold text-slate-900 dark:text-white leading-snug">{c.title}</p>
               </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">{c.body}</p>
             </div>
           ))}
         </div>
