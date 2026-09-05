@@ -5,6 +5,7 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
+import { Web3Provider } from "./context/Web3Context.jsx";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -13,7 +14,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <AuthProvider>
           <ToastProvider>
-            <App />
+            <Web3Provider>
+              <App />
+            </Web3Provider>
           </ToastProvider>
         </AuthProvider>
       </ThemeProvider>

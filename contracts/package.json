@@ -1,0 +1,22 @@
+{
+  "name": "aven-eth-contracts",
+  "version": "1.0.0",
+  "description": "Production-grade streaming escrow smart contracts for AVEN-ETH",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:base-sepolia": "hardhat run scripts/deploy.js --network baseSepolia"
+  },
+  "keywords": ["solidity", "hardhat", "escrow", "streaming", "ethereum", "web3"],
+  "author": "AVEN-ETH",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.10"
+  }
+}
