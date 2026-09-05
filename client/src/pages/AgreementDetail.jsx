@@ -12,6 +12,7 @@ import RatingModal from "../components/RatingModal.jsx";
 import Modal from "../components/Modal.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { formatEth, formatDate, formatDateTime, truncateAddress } from "../utils/format.js";
+import { useWeb3 } from "../context/Web3Context.jsx";
 
 const TIMELINE_ORDER = ["PENDING_FUNDING", "FUNDED", "IN_PROGRESS", "SUBMITTED", "COMPLETED"];
 const TIMELINE_LABELS = {
@@ -115,6 +116,16 @@ export default function AgreementDetail() {
   const [claiming, setClaiming] = useState(false);
   const [disputing, setDisputing] = useState(false);
   const [startingProject, setStartingProject] = useState(false);
+  const [onChainTx, setOnChainTx] = useState(null);
+
+  const {
+    account,
+    isBaseSepolia,
+    shortAddress,
+    fundStreamOnChain,
+    switchToBaseSepolia,
+    CONTRACT_ADDRESSES,
+  } = useWeb3();
 
   function load() {
     api
@@ -335,6 +346,16 @@ export default function AgreementDetail() {
                 <span className="text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] px-2.5 py-1 rounded-lg">
                   ID: #{agreement.id}
                 </span>
+                <a
+                  href={`https://sepolia.basescan.org/address/${CONTRACT_ADDRESSES.AvenEscrowStream}#code`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 px-2.5 py-1 rounded-lg hover:underline flex items-center gap-1.5"
+                  title="View live AvenEscrowStream contract on Basescan"
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Base Sepolia Vault: {truncateAddress(CONTRACT_ADDRESSES.AvenEscrowStream)}</span>
+                </a>
               </div>
               <StatusBadge status={agreement.status} />
             </div>
@@ -761,6 +782,34 @@ export default function AgreementDetail() {
         confirmLabel="Confirm & Lock Deposit"
         loadingLabel="Locking in vault..."
         onConfirm={async () => {
+          if (account) {
+            try {
+              if (!isBaseSepolia) {
+                toast.info("Switching MetaMask to Base Sepolia...");
+                await switchToBaseSepolia();
+              }
+              toast.info("Step 1/2: Approving MockUSDC transfer in MetaMask...");
+
+              const freelancerWallet =
+                agreement.freelancer?.walletAddress ||
+                "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+
+              const res = await fundStreamOnChain({
+                freelancerAddress: freelancerWallet,
+                budget: agreement.budget || 100,
+                durationSeconds: 86400,
+                withdrawableCapPercent: 75,
+                externalAgreementId: agreement.id,
+              });
+
+              setOnChainTx(res.txHash);
+              toast.success(`Funded on Base Sepolia! Tx: ${res.txHash.slice(0, 10)}...`);
+            } catch (onChainErr) {
+              console.warn("On-chain execution notice:", onChainErr);
+              toast.warning(`MetaMask Notice: ${onChainErr.message || "Simulated lock will proceed"}`);
+            }
+          }
+
           await api.fundEscrow(agreement.id);
           toast.success("Stream funded successfully.");
           setFundOpen(false);
@@ -777,6 +826,43 @@ export default function AgreementDetail() {
             active
           />
         </div>
+
+        {/* Web3 Execution Pill */}
+        {account ? (
+          <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-xs font-mono">
+            <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live Web3: {shortAddress}
+              </span>
+              <span className="text-[10px] uppercase font-bold bg-emerald-100 dark:bg-emerald-800/60 px-2 py-0.5 rounded">
+                Base Sepolia
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
+              Clicking confirm will trigger a real on-chain transaction on contract <code className="text-emerald-700 dark:text-emerald-300">0x5Cfa...C6F9</code>.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4 p-3 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] text-xs font-mono text-slate-500">
+            <span>MetaMask not connected &bull; Escrow will lock in local simulation mode.</span>
+          </div>
+        )}
+
+        {onChainTx && (
+          <div className="mt-3 p-3 rounded-xl bg-indigo-50 dark:bg-[#6366F1]/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between text-xs font-mono">
+            <span className="text-[#6366F1] dark:text-[#818CF8] font-medium">Basescan Tx Hash:</span>
+            <a
+              href={`https://sepolia.basescan.org/tx/${onChainTx}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-indigo-600 dark:text-indigo-400 underline font-semibold"
+            >
+              View on Basescan &rarr;
+            </a>
+          </div>
+        )}
+
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-4 font-mono">
           <strong className="text-slate-900 dark:text-white">{formatEth(agreement.budget)}</strong> will be locked in the AVEN Stream Contract and flow continuously as work is verified.
         </p>
