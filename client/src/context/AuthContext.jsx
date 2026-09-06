@@ -42,11 +42,26 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+  }, []);
+
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await api.me();
+      if (res?.user) setUser(res.user);
+      return res?.user;
+    } catch {}
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, setError }}>
+    <AuthContext.Provider
+      value={{ user, loading, error, login, register, logout, updateUser, refreshUser, setError }}
+    >
       {children}
     </AuthContext.Provider>
   );
+
 }
 
 export function useAuth() {

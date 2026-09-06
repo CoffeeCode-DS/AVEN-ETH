@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import SidekickLogo from "./SidekickLogo.jsx";
+import Avatar from "./Avatar.jsx";
 
 const ICONS = {
   overview: (
@@ -135,15 +136,18 @@ export function SidebarContent({ onNavigate }) {
       {/* User Profile Pill at Bottom */}
       <div className="p-3 border-t border-slate-200 dark:border-white/[0.08]">
         <div className="flex items-center justify-between gap-2.5 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-8 w-8 rounded-full bg-[#6366F1] flex items-center justify-center text-xs font-semibold text-white shadow-md flex-shrink-0">
-              {user?.avatar || "AV"}
-            </div>
+          <Link
+            to="/profile"
+            onClick={onNavigate}
+            className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity"
+            title="View Profile & Identity"
+          >
+            <Avatar user={user} size="sm" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-slate-900 dark:text-white truncate">{user?.name || "User"}</p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || "user@aven.dev"}</p>
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={logout}

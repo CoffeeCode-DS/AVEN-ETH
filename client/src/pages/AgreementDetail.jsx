@@ -11,6 +11,7 @@ import StreamingMeter from "../components/StreamingMeter.jsx";
 import RatingModal from "../components/RatingModal.jsx";
 import Modal from "../components/Modal.jsx";
 import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import Avatar from "../components/Avatar.jsx";
 import { formatEth, formatDate, formatDateTime, truncateAddress } from "../utils/format.js";
 import { useWeb3 } from "../context/Web3Context.jsx";
 
@@ -574,9 +575,12 @@ export default function AgreementDetail() {
                 Client (Sender)
               </p>
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]">
-                <div className="h-10 w-10 rounded-xl bg-[#6366F1] text-white text-sm font-bold flex items-center justify-center shrink-0">
-                  {agreement.client?.avatar || "C"}
-                </div>
+                <Avatar
+                  user={agreement.client}
+                  size="md"
+                  rounded="rounded-xl"
+                  showBorder
+                />
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{agreement.client?.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">{truncateAddress(agreement.client?.walletAddress)}</p>
@@ -599,15 +603,19 @@ export default function AgreementDetail() {
                 )}
               </div>
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.06]">
-                <div className="h-10 w-10 rounded-xl bg-[#6366F1] text-white text-sm font-bold flex items-center justify-center shrink-0">
-                  {agreement.freelancer?.avatar || "F"}
-                </div>
+                <Avatar
+                  user={agreement.freelancer}
+                  size="md"
+                  rounded="rounded-xl"
+                  showBorder
+                />
                 <div className="min-w-0">
                   <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{agreement.freelancer?.name}</p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate">{truncateAddress(agreement.freelancer?.walletAddress)}</p>
                 </div>
               </div>
             </div>
+
           </div>
 
           {/* Stream Actions & Controls */}

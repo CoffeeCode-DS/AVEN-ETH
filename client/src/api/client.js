@@ -57,6 +57,7 @@ export const api = {
   me: () => request("/auth/me"),
 
   freelancers: () => request("/users/freelancers"),
+  updateProfile: (payload) => request("/users/profile", { method: "PATCH", body: payload }),
 
   dashboard: () => request("/dashboard"),
 

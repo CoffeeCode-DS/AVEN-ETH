@@ -5,12 +5,15 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { api } from "../api/client.js";
 import { formatEth, truncateAddress, formatDate } from "../utils/format.js";
+import Avatar from "../components/Avatar.jsx";
+import AvatarUploadModal from "../components/AvatarUploadModal.jsx";
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const toast = useToast();
   const [dashboard, setDashboard] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   useEffect(() => {
     api.dashboard().then(setDashboard).catch(() => {});
@@ -37,9 +40,27 @@ export default function Profile() {
           {/* Identity Header Card */}
           <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-2xl space-y-6">
             <div className="flex items-center gap-5 flex-wrap">
-              <div className="h-16 w-16 rounded-2xl bg-[#6366F1] text-white text-2xl font-bold flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/25">
-                {user.avatar || "AV"}
+              <div
+                className="relative group cursor-pointer shrink-0"
+                onClick={() => setIsAvatarModalOpen(true)}
+                title="Click to update profile photo"
+              >
+                <Avatar
+                  user={user}
+                  size="xl"
+                  rounded="rounded-2xl"
+                  showBorder
+                  className="shadow-lg shadow-indigo-500/20"
+                />
+                <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 flex flex-col items-center justify-center text-white text-[10px] font-mono font-medium">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 mb-0.5">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  <span>Edit</span>
+                </div>
               </div>
+
               <div className="min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">{user.name}</h2>
@@ -56,6 +77,19 @@ export default function Profile() {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">{user.title || (isClient ? "Engineering Client" : "Smart Contract Engineer")}</p>
+                <div className="mt-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsAvatarModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 text-[11px] font-mono font-medium transition-colors border border-slate-200 dark:border-white/[0.08]"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <span>Change Photo / Avatar</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -181,6 +215,12 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <AvatarUploadModal
+        isOpen={isAvatarModalOpen}
+        onClose={() => setIsAvatarModalOpen(false)}
+      />
     </AppLayout>
   );
 }
+

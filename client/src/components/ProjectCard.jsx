@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "./StatusBadge.jsx";
+import Avatar from "./Avatar.jsx";
 import { formatEth, formatDate, statusProgress, nextActionLabel, daysUntil } from "../utils/format.js";
 
 export default function ProjectCard({ agreement, role }) {
@@ -20,12 +21,11 @@ export default function ProjectCard({ agreement, role }) {
             {agreement.title}
           </h3>
           <div className="flex items-center gap-1.5 mt-1.5">
-            <span className="h-5 w-5 rounded-full bg-[#6366F1] text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-              {counterpart?.avatar || "A"}
-            </span>
+            <Avatar user={counterpart} size="xs" />
             <span className="text-xs text-slate-500 dark:text-slate-400 truncate">{counterpart?.name}</span>
           </div>
         </div>
+
         <StatusBadge status={agreement.status} />
       </div>
 

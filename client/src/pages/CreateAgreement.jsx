@@ -5,6 +5,7 @@ import { api } from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import EscrowFlow from "../components/EscrowFlow.jsx";
+import Avatar from "../components/Avatar.jsx";
 import { formatEth, truncateAddress } from "../utils/format.js";
 
 const STEPS = [
@@ -286,9 +287,7 @@ export default function CreateAgreement() {
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-9 w-9 rounded-full bg-[#6366F1] text-white text-xs font-bold flex items-center justify-center shrink-0">
-                            {f.avatar || "F"}
-                          </div>
+                          <Avatar user={f} size="sm" />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <p className="font-semibold text-slate-900 dark:text-white text-xs">{f.name}</p>

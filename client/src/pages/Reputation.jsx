@@ -4,6 +4,7 @@ import AppLayout from "../layouts/AppLayout.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api/client.js";
 import { formatEth, formatDate, truncateAddress } from "../utils/format.js";
+import Avatar from "../components/Avatar.jsx";
 
 const CATEGORY_COLORS = {
   Grant: "text-purple-600 dark:text-purple-300 bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/30",
@@ -89,14 +90,24 @@ export default function Reputation() {
                 </span>
               </div>
 
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
-                  {repUser.name}
-                </h2>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-1 font-sans">
-                  On-chain score computed continuously from immutable payment attestations and Git diff verifications.
-                </p>
+              <div className="flex items-center gap-4">
+                <Avatar
+                  user={repUser}
+                  size="xl"
+                  rounded="rounded-2xl"
+                  showBorder
+                  className="shadow-lg shadow-indigo-500/20"
+                />
+                <div className="min-w-0">
+                  <h2 className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white tracking-tight">
+                    {repUser.name}
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-0.5 font-sans">
+                    On-chain score computed continuously from immutable payment attestations and Git diff verifications.
+                  </p>
+                </div>
               </div>
+
 
               {/* Progress bar to 10,000 */}
               <div className="space-y-1.5 pt-2">
