@@ -25,7 +25,7 @@ export default function FreelancerDashboard() {
 
   return (
     <AppLayout
-      title={`Welcome to AVEN`}
+      title={`Welcome to Sidekick`}
       subtitle="Track your real-time payment streams, work sessions, and verified on-chain reputation."
     >
       {/* 1. Top Git CLI Alert / Quick Connect Banner */}
@@ -42,7 +42,7 @@ export default function FreelancerDashboard() {
               Launch local CLI watcher to stream code commits and auto-mint EAS attestations.
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              Run <code className="text-[#6366F1] dark:text-[#818CF8] bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded">aven watch</code> in your project repository
+              Run <code className="text-[#6366F1] dark:text-[#818CF8] bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded">sidekick watch</code> in your project repository
             </p>
           </div>
         </div>

@@ -23,8 +23,8 @@ export default function ClientDashboard() {
 
   return (
     <AppLayout
-      title={`Welcome to AVEN`}
-      subtitle="Connect your tools, track real-time payment streams, and verify cryptographic work."
+      title={`Welcome to Sidekick`}
+      subtitle="Client Payment Streams & Active Freelance Escrow Vaults"
     >
       {/* 1. Top Git CLI Alert / Quick Connect Banner */}
       <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm dark:shadow-xl">
@@ -39,7 +39,7 @@ export default function ClientDashboard() {
               Connect your Git CLI watcher to stream code proof &amp; monitor live milestones.
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-              Run <code className="text-[#6366F1] dark:text-[#818CF8] bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded">aven watch --agreement [id]</code> locally
+              Run <code className="text-[#6366F1] dark:text-[#818CF8] bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded">sidekick watch --agreement [id]</code> locally
             </p>
           </div>
         </div>
@@ -167,11 +167,11 @@ export default function ClientDashboard() {
             />
           </div>
 
-          {/* 4. What's New In AVEN Banner */}
+          {/* 4. What's New In Sidekick Banner */}
           <div className="mb-8 p-5 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.08] shadow-sm dark:shadow-xl">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-[10px] font-mono font-bold tracking-wider text-[#6366F1] dark:text-[#818CF8] uppercase">
-                WHAT'S NEW IN AVEN &middot; NOW IN PROTOCOL v2.0
+                WHAT'S NEW IN SIDEKICK &middot; NOW IN PROTOCOL v2.0
               </span>
             </div>
             <div className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 font-sans">

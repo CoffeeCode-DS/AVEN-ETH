@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import SidekickLogo from "../components/SidekickLogo.jsx";
 
 const DEMO_ACCOUNTS = [
   { role: "CLIENT", label: "Client Workspace", name: "Sarah Chen", email: "client@aven.dev", balance: "25.0 ETH" },
@@ -77,35 +78,29 @@ export default function Login() {
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#000000] dark:text-[#E2E8F0] font-sans antialiased selection:bg-[#6366F1] selection:text-white flex flex-col justify-between p-8 sm:p-14 lg:p-20 transition-colors duration-150">
       {/* Top Mobile Brand Bar */}
       <div className="lg:hidden flex items-center justify-between pb-6 border-b border-slate-200 dark:border-white/[0.06] mb-6">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-full bg-[#6366F1] flex items-center justify-center p-1 text-white">
-            <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" />
-            </svg>
-          </div>
-          <span className="font-normal text-lg tracking-tight text-slate-900 dark:text-white lowercase">aven</span>
+        <Link to="/">
+          <SidekickLogo
+            containerClassName="h-7 w-7 rounded-xl bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] p-1.5"
+            className="h-3.5 w-3.5"
+            textClassName="text-lg font-bold text-slate-900 dark:text-white"
+          />
         </Link>
       </div>
 
       {/* Main Container: 2-Column Exact Layout */}
       <div className="max-w-7xl mx-auto w-full grid lg:grid-cols-12 gap-12 lg:gap-24 items-center my-auto">
         {/* ========================================================================= */}
-        {/* LEFT COLUMN: BRAND & NARRATIVE (AVEN Decentralized Platform) */}
+        {/* LEFT COLUMN: BRAND & NARRATIVE (Sidekick Decentralized Platform) */}
         {/* ========================================================================= */}
         <div className="lg:col-span-7 space-y-16 lg:pr-6">
           {/* Logo (Original Left Column Position) */}
           <div className="hidden lg:flex items-center">
-            <Link to="/" className="inline-flex items-center gap-2.5 group">
-              <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#6366F1] to-[#818CF8] flex items-center justify-center p-1 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-                  <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" />
-                  <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span className="font-normal text-[24px] tracking-tight text-slate-900 dark:text-white lowercase">
-                aven
-              </span>
+            <Link to="/">
+              <SidekickLogo
+                containerClassName="h-10 w-10 rounded-2xl bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] p-2"
+                className="h-5 w-5"
+                textClassName="text-[26px] font-bold text-slate-900 dark:text-white"
+              />
             </Link>
           </div>
 
@@ -166,7 +161,7 @@ export default function Login() {
           {/* Header (Centered) */}
           <div className="text-center space-y-1.5 mb-6">
             <h2 className="text-[22px] sm:text-[24px] font-semibold text-[#6366F1] dark:text-[#818CF8] tracking-tight">
-              Welcome to AVEN
+              Welcome to Sidekick
             </h2>
             <p className="text-slate-600 dark:text-[#94A3B8] text-[13px] font-normal">
               {authView === "buttons" && "Connect your workspace to continue"}

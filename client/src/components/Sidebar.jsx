@@ -1,6 +1,7 @@
 import React from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import SidekickLogo from "./SidekickLogo.jsx";
 
 const ICONS = {
   overview: (
@@ -91,17 +92,12 @@ export function SidebarContent({ onNavigate }) {
     <div className="flex flex-col h-full bg-white dark:bg-[#000000] text-slate-700 dark:text-slate-300 font-sans border-r border-slate-200 dark:border-white/[0.08] transition-colors duration-150">
       {/* Brand Header */}
       <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200 dark:border-white/[0.08]">
-        <Link to="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5 group">
-          <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-[#6366F1] to-[#818CF8] flex items-center justify-center p-1.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-            <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" opacity="0.95" />
-              <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span className="font-normal text-[20px] tracking-tight text-slate-900 dark:text-white lowercase">
-            aven<span className="text-[#6366F1] dark:text-[#818CF8]">.eth</span>
-          </span>
+        <Link to="/dashboard" onClick={onNavigate}>
+          <SidekickLogo
+            containerClassName="h-8 w-8 rounded-xl bg-slate-100 dark:bg-white/[0.08] border border-slate-200 dark:border-white/[0.12] p-1.5"
+            className="h-4 w-4"
+            textClassName="text-[20px] font-bold text-slate-900 dark:text-white"
+          />
         </Link>
       </div>
 

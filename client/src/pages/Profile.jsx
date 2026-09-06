@@ -111,7 +111,7 @@ export default function Profile() {
           <div className="p-6 rounded-2xl bg-white dark:bg-[#0A0A0A] border border-indigo-200 dark:border-indigo-500/25 shadow-sm dark:shadow-2xl space-y-2">
             <div className="flex items-center gap-2 text-xs font-mono text-[#6366F1] dark:text-[#818CF8]">
               <span className="h-2 w-2 rounded-full bg-[#6366F1] animate-pulse" />
-              <span>AVEN-ETH Consensus Identity Active</span>
+              <span>Sidekick Consensus Identity Active</span>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-sans">
               All payment stream contracts, time-tracked contribution sessions, Git commit diffs, and EAS skill attestations are permanently anchored to your wallet address: <strong className="font-mono text-slate-900 dark:text-white">{truncateAddress(user.walletAddress)}</strong>.

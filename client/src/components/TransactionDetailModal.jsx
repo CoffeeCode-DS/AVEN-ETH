@@ -69,7 +69,7 @@ export default function TransactionDetailModal({ txn, open, onClose }) {
       <Disclosure title="Participants" defaultOpen>
         <Row label="From" value={txn.fromName || truncateAddress(txn.from)} />
         <Row label="To" value={txn.toName || truncateAddress(txn.to)} />
-        <Row label="Escrow Contract" value="AVEN-ETH Stream Vault (0x3F2bA7e91)" mono />
+        <Row label="Escrow Contract" value="Sidekick Stream Vault (0x3F2bA7e91)" mono />
       </Disclosure>
 
       <Disclosure title="Blockchain Data" defaultOpen>

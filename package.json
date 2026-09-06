@@ -5,6 +5,7 @@
   "type": "module",
   "description": "AVEN-ETH — Decentralized Streaming Payments & On-Chain Reputation Protocol.",
   "bin": {
+    "sidekick": "./cli/bin/aven-eth.js",
     "aven-eth": "./cli/bin/aven-eth.js"
   },
   "engines": {

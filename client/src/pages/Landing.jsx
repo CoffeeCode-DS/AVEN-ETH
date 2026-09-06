@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
+import SidekickLogo from "../components/SidekickLogo.jsx";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -13,18 +14,12 @@ export default function Landing() {
       {/* ========================================================================= */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#000000]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.06] transition-colors duration-150">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 h-[76px] flex items-center justify-between">
-          {/* Left: Brand Logo (aven.eth) */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-[#6366F1] to-[#818CF8] flex items-center justify-center p-1.5 shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-                <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" opacity="0.95" />
-                <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="font-normal text-[24px] tracking-tight text-slate-900 dark:text-white lowercase">
-              aven<span className="text-[#6366F1] dark:text-[#818CF8]">.eth</span>
-            </span>
+          {/* Left: Brand Logo (Sidekick) */}
+          <Link to="/">
+            <SidekickLogo
+              className="h-8 w-8"
+              textClassName="text-[24px] font-bold text-slate-900 dark:text-white"
+            />
           </Link>
 
           {/* Center: Navigation Links */}
@@ -96,7 +91,7 @@ export default function Landing() {
 
           {/* Subtitle */}
           <p className="mt-6 text-base sm:text-lg md:text-[18px] text-slate-600 dark:text-[#94A3B8] max-w-2xl mx-auto leading-relaxed font-normal">
-            AVEN standardizes continuous micro-payment streams from smart escrow vaults, cryptographic Git Merkle diff verification, and immutable on-chain developer reputation.
+            Sidekick standardizes continuous micro-payment streams from smart escrow vaults, cryptographic Git Merkle diff verification, and immutable on-chain developer reputation.
           </p>
 
           {/* Hero CTAs */}
@@ -207,7 +202,7 @@ export default function Landing() {
                 remote developer era
               </h2>
               <p className="text-slate-600 dark:text-[#94A3B8] text-base leading-relaxed max-w-md font-normal">
-                AVEN provides the decentralized settlement layer that streams tokens second-by-second, binds deliverables to Git Merkle trees, and guarantees zero-drift dispute protection.
+                Sidekick provides the decentralized settlement layer that streams tokens second-by-second, binds deliverables to Git Merkle trees, and guarantees zero-drift dispute protection.
               </p>
             </div>
 
@@ -299,7 +294,7 @@ export default function Landing() {
               on every single commit
             </h2>
             <p className="text-slate-600 dark:text-[#94A3B8] text-base sm:text-[17px] font-normal leading-relaxed">
-              The AVEN CLI watcher hashes commit ranges and working tree diffs in real-time, submitting verifiable cryptographic Merkle roots before unlocking escrow payouts.
+              The Sidekick CLI watcher hashes commit ranges and working tree diffs in real-time, submitting verifiable cryptographic Merkle roots before unlocking escrow payouts.
             </p>
           </div>
 
@@ -321,9 +316,9 @@ export default function Landing() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="h-6 w-6 rounded-full bg-[#6366F1] flex items-center justify-center text-white text-[11px] font-medium">
-                    A
+                    S
                   </div>
-                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Cryptographic Proof by AVEN</span>
+                  <span className="text-sm font-semibold text-slate-900 dark:text-white">Cryptographic Proof by Sidekick</span>
                 </div>
                 <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">3 VERIFIED PROOFS</span>
               </div>
@@ -483,17 +478,14 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-6 gap-9">
             {/* Left Brand Column */}
             <div className="col-span-2 space-y-5">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-full bg-[#6366F1] flex items-center justify-center p-1 text-white shadow-md">
-                  <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-                    <path d="M12 2L3 7L12 12L21 7L12 2Z" fill="currentColor" />
-                    <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                </div>
-                <span className="font-normal text-[22px] tracking-tight text-slate-900 dark:text-white lowercase">aven</span>
-              </div>
+              <Link to="/">
+                <SidekickLogo
+                  className="h-7 w-7"
+                  textClassName="text-[22px] font-bold text-slate-900 dark:text-white"
+                />
+              </Link>
               <p className="text-[12.5px] text-slate-600 dark:text-slate-400 leading-[1.65] max-w-sm font-normal">
-                AVEN is a decentralized continuous payment and on-chain developer reputation protocol that brings automated, context-aware proof of work into your IDE, pull requests, CLI, and Ethereum consensus layer. Built for high-trust engineering teams with real-time micropayment streaming, Git Merkle proof verification, zero-trust dispute freezes, and tamper-proof reputation scoring.
+                Sidekick is a decentralized continuous payment and on-chain developer reputation protocol that brings automated, context-aware proof of work into your IDE, pull requests, CLI, and Ethereum consensus layer. Built for high-trust engineering teams with real-time micropayment streaming, Git Merkle proof verification, zero-trust dispute freezes, and tamper-proof reputation scoring.
               </p>
               
               {/* Social Icons (GitHub, YouTube, LinkedIn, X) */}
@@ -531,7 +523,7 @@ export default function Landing() {
                 <li><a href="#github" className="hover:text-slate-900 dark:hover:text-white transition-colors">GitHub Repository</a></li>
                 <li><a href="#cli" className="hover:text-slate-900 dark:hover:text-white transition-colors">CLI Binaries</a></li>
                 <li><a href="#contracts" className="hover:text-slate-900 dark:hover:text-white transition-colors">Smart Contracts</a></li>
-                <li><Link to="/security" className="hover:text-slate-900 dark:hover:text-white transition-colors">AVEN Trust Center</Link></li>
+                <li><Link to="/security" className="hover:text-slate-900 dark:hover:text-white transition-colors">Sidekick Trust Center</Link></li>
               </ul>
             </div>
 
@@ -540,8 +532,8 @@ export default function Landing() {
               <p className="font-semibold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] mb-4 font-mono">Ecosystem</p>
               <ul className="space-y-3 text-[12.5px] font-normal">
                 <li><a href="#eas" className="hover:text-slate-900 dark:hover:text-white transition-colors">EAS Attestation Registry</a></li>
-                <li><a href="#vscode" className="hover:text-slate-900 dark:hover:text-white transition-colors">AVEN &amp; VS Code</a></li>
-                <li><a href="#cursor" className="hover:text-slate-900 dark:hover:text-white transition-colors">AVEN &amp; Cursor</a></li>
+                <li><a href="#vscode" className="hover:text-slate-900 dark:hover:text-white transition-colors">Sidekick &amp; VS Code</a></li>
+                <li><a href="#cursor" className="hover:text-slate-900 dark:hover:text-white transition-colors">Sidekick &amp; Cursor</a></li>
                 <li><a href="#ethereum" className="hover:text-slate-900 dark:hover:text-white transition-colors">Ethereum Testnet</a></li>
                 <li><a href="#chains" className="hover:text-slate-900 dark:hover:text-white transition-colors">Supported L2 Networks</a></li>
                 <li><a href="#glossary" className="hover:text-slate-900 dark:hover:text-white transition-colors">Protocol Glossary</a></li>

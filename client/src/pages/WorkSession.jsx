@@ -201,7 +201,7 @@ export default function WorkSession() {
             <div className="flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                AVEN Session Watcher CLI
+                Sidekick Session Watcher CLI
               </span>
               <button
                 type="button"

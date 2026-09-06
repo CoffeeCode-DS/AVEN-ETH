@@ -1,4 +1,4 @@
-# AVEN-ETH: Decentralized Freelance Escrow and Continuous Payment Streaming Protocol
+# Sidekick: Decentralized Freelance Escrow and Continuous Payment Streaming Protocol
 
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=for-the-badge&logo=solidity&logoColor=white)](https://soliditylang.org/)
 [![Base Sepolia](https://img.shields.io/badge/Base_Sepolia-Live_Testnet-0052FF?style=for-the-badge&logo=coinbase&logoColor=white)](https://sepolia.basescan.org/address/0x5Cfa2C922C1C1Fd42ba7570306a7D83e630dC6F9)
@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React_18-Vite_SPA-61DAFB?style=for-the-badge&logo=react&logoColor=black)](./client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](./LICENSE)
 
-AVEN-ETH is an open-source, non-custodial freelance protocol combining continuous per-second payment streaming smart contracts on Base Sepolia (Ethereum Layer-2) with an Ethereum Attestation Service (EAS) reputation framework and a verifiable SHA-256 Proof-of-Work ledger.
+Sidekick is an open-source, non-custodial freelance protocol combining continuous per-second payment streaming smart contracts on Base Sepolia (Ethereum Layer-2) with an Ethereum Attestation Service (EAS) reputation framework and a verifiable SHA-256 Proof-of-Work ledger.
 
 ---
 
@@ -30,7 +30,7 @@ The protocol contracts are deployed and verified on the Base Sepolia Layer-2 tes
 2. **Liquidity Friction for Contributors:** Contributors work for extended durations before receiving milestone disbursements, exposing them to non-payment or unilateral chargeback risks.
 3. **Platform-Locked Reputations:** Contributor ratings are siloed inside proprietary platforms and cannot be exported or independently verified across platforms or credit systems.
 
-### The AVEN-ETH Protocol Solution
+### The Sidekick Protocol Solution
 1. **Continuous Per-Second Streaming:** Funds stream dynamically every second as verified work occurs, enabling on-demand withdrawals.
 2. **Non-Custodial Smart Contract Vault:** Deposits are held in `AvenEscrowStream.sol`. Neither the client nor the platform operators can withdraw locked funds once work is logged.
 3. **75% Safety Withdrawable Cap:** During active execution (`IN_PROGRESS`), contributors can withdraw up to 75% of accrued earnings for immediate liquidity, while the final 25% requires client review and milestone approval.

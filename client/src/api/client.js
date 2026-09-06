@@ -29,7 +29,7 @@ async function request(path, { method = "GET", body } = {}) {
     });
   } catch (networkErr) {
     throw new ApiError(
-      "Can't reach the AVEN-ETH server. Make sure the backend is running on port 4000.",
+      "Can't reach the Sidekick server. Make sure the backend is running on port 4000.",
       0
     );
   }

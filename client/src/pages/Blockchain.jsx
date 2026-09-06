@@ -41,7 +41,7 @@ export default function Blockchain() {
   return (
     <AppLayout
       title="Blockchain Ledger"
-      subtitle="The immutable AVEN-ETH Proof-of-Work blockchain — every stream deposit, commit proof, and claim permanently linked."
+      subtitle="The immutable Sidekick Proof-of-Work blockchain — every stream deposit, commit proof, and claim permanently linked."
     >
       {/* 4-Bento Blockchain Overview Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">

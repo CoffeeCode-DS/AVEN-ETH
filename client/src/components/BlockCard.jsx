@@ -88,7 +88,7 @@ export default function BlockCard({ block, broken = false }) {
           <p className="text-slate-700 dark:text-slate-300 mt-0.5">{block.difficulty}</p>
         </div>
       </div>
-      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-3">{formatDateTime(block.timestamp)} &middot; Proof of Work &middot; AVEN-ETH Localnet (Chain: 31337)</p>
+      <p className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-3">{formatDateTime(block.timestamp)} &middot; Proof of Work &middot; Sidekick Localnet (Chain: 31337)</p>
     </div>
   );
 }
