@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { api } from "../api/client.js";
@@ -16,12 +16,17 @@ const CATEGORY_COLORS = {
 
 export default function Reputation() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const targetUserId = user.role === "FREELANCER" ? user.id : "user_freelancer_1";
+    // If a specific userId is in query params (e.g. ?userId=...), view that user.
+    // Otherwise, always default to the currently logged in user!
+    const queryUserId = searchParams.get("userId");
+    const targetUserId = queryUserId || user?.id;
+
     api
       .reputation(targetUserId)
       .then((res) => {
@@ -32,7 +37,7 @@ export default function Reputation() {
         setError(err.message);
         setLoading(false);
       });
-  }, [user]);
+  }, [user, searchParams]);
 
   if (loading) {
     return (
@@ -77,7 +82,7 @@ export default function Reputation() {
             <div className="lg:col-span-8 space-y-4">
               <div className="flex items-center gap-3">
                 <span className="text-xs font-mono px-3 py-1 rounded-full bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] uppercase tracking-wider border border-indigo-200 dark:border-indigo-500/30">
-                  Verifiable Proof of Work
+                  {repUser.role === "CLIENT" ? "Verified Client Identity" : "Verifiable Proof of Work"}
                 </span>
                 <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                   {truncateAddress(repUser.walletAddress)}
@@ -249,7 +254,19 @@ export default function Reputation() {
           </div>
 
           <div className="divide-y divide-slate-200 dark:divide-white/[0.06]">
-            {reputation.attestations.map((att) => (
+            {reputation.attestations.length === 0 ? (
+              <div className="py-12 text-center space-y-2">
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  No attestations mined yet
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto font-sans">
+                  {repUser.role === "CLIENT"
+                    ? "Fund streams and approve deliverables to record client milestone attestations."
+                    : "Complete milestone agreements and stream payouts to build on-chain EAS attestations and boost your score."}
+                </p>
+              </div>
+            ) : (
+              reputation.attestations.map((att) => (
               <div key={att.id} className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -283,7 +300,7 @@ export default function Reputation() {
                   </span>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       </div>
