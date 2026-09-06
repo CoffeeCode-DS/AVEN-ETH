@@ -18,12 +18,17 @@
     "dev": "concurrently -n SERVER,CLIENT -c blue,magenta \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
-    "build": "npm run build --prefix client",
+    "build": "npm run build --prefix client && rm -rf dist && cp -r client/dist dist",
     "test": "npm test --prefix server",
     "test:contracts": "npm test --prefix contracts",
     "test:all": "npm test --prefix server && npm test --prefix contracts",
     "compile:contracts": "npm run compile --prefix contracts",
     "deploy:contracts:local": "npm run deploy:local --prefix contracts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
