@@ -2,6 +2,6 @@ import app from "./app.js";
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`\n  Sidekick API (Simulation Mode) running on http://localhost:${PORT}\n`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`\n  Sidekick API (Simulation Mode) running on port ${PORT}\n`);
 });
