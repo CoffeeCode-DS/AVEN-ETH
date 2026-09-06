@@ -1,8 +1,28 @@
 import { useEffect } from "react";
 
-export default function Modal({ open, onClose, title, subtitle, children, footer, width = "max-w-lg" }) {
+export default function Modal({
+  open,
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+  children,
+  footer,
+  width,
+  size = "md",
+}) {
+  const isVisible = Boolean(open ?? isOpen);
+
+  const sizeToWidth = {
+    sm: "max-w-sm",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
+  };
+  const modalWidth = width || sizeToWidth[size] || "max-w-lg";
+
   useEffect(() => {
-    if (!open) return;
+    if (!isVisible) return;
     function onKey(e) {
       if (e.key === "Escape") onClose?.();
     }
@@ -12,9 +32,10 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [isVisible, onClose]);
 
-  if (!open) return null;
+  if (!isVisible) return null;
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -27,7 +48,7 @@ export default function Modal({ open, onClose, title, subtitle, children, footer
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative z-10 w-full ${width} rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.1] p-6 max-h-[88vh] overflow-y-auto shadow-2xl animate-scaleIn my-auto text-slate-900 dark:text-slate-100 transition-colors`}
+        className={`relative z-10 w-full ${modalWidth} rounded-2xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.1] p-6 max-h-[88vh] overflow-y-auto shadow-2xl animate-scaleIn my-auto text-slate-900 dark:text-slate-100 transition-colors`}
       >
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>

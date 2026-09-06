@@ -7,9 +7,25 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function AppLayout({ title, subtitle, children }) {
   const { user } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [setupDismissed, setSetupDismissed] = useState(false);
+  const [setupDismissed, setSetupDismissed] = useState(() => {
+    if (!user?.id) return false;
+    try {
+      return sessionStorage.getItem(`setup_dismissed_${user.id}`) === "true";
+    } catch {
+      return false;
+    }
+  });
 
-  const showSetupModal = Boolean(user && user.profileCompleted === false && !setupDismissed);
+  const showSetupModal = Boolean(user && user.profileCompleted !== true && !setupDismissed);
+
+  const handleDismissSetup = () => {
+    setSetupDismissed(true);
+    if (user?.id) {
+      try {
+        sessionStorage.setItem(`setup_dismissed_${user.id}`, "true");
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
@@ -47,7 +63,7 @@ export default function AppLayout({ title, subtitle, children }) {
 
       <ProfileSetupModal
         isOpen={showSetupModal}
-        onClose={() => setSetupDismissed(true)}
+        onClose={handleDismissSetup}
       />
     </div>
   );

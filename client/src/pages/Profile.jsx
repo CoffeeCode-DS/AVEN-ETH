@@ -7,6 +7,7 @@ import { api } from "../api/client.js";
 import { formatEth, truncateAddress, formatDate } from "../utils/format.js";
 import Avatar from "../components/Avatar.jsx";
 import AvatarUploadModal from "../components/AvatarUploadModal.jsx";
+import ProfileSetupModal from "../components/ProfileSetupModal.jsx";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -14,6 +15,7 @@ export default function Profile() {
   const [dashboard, setDashboard] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
 
   useEffect(() => {
     api.dashboard().then(setDashboard).catch(() => {});
@@ -77,7 +79,7 @@ export default function Profile() {
                   )}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono">{user.title || (isClient ? "Engineering Client" : "Smart Contract Engineer")}</p>
-                <div className="mt-2.5">
+                <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
                     onClick={() => setIsAvatarModalOpen(true)}
@@ -88,6 +90,17 @@ export default function Profile() {
                       <circle cx="12" cy="13" r="4" />
                     </svg>
                     <span>Change Photo / Avatar</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSetupModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#6366F1]/10 hover:bg-[#6366F1]/20 text-[#6366F1] dark:text-[#818CF8] text-[11px] font-mono font-medium transition-colors border border-[#6366F1]/30"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    <span>Profile Setup Wizard</span>
                   </button>
                 </div>
               </div>
@@ -219,6 +232,11 @@ export default function Profile() {
       <AvatarUploadModal
         isOpen={isAvatarModalOpen}
         onClose={() => setIsAvatarModalOpen(false)}
+      />
+
+      <ProfileSetupModal
+        isOpen={isSetupModalOpen}
+        onClose={() => setIsSetupModalOpen(false)}
       />
     </AppLayout>
   );
