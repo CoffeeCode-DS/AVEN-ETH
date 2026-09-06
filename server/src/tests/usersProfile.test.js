@@ -41,3 +41,17 @@ test("updating profile name and skills persists properly", () => {
   assert.equal(updated.title, "Lead Smart Contract Architect");
   assert.deepEqual(updated.skills, ["Solidity", "Rust", "Zero-Knowledge"]);
 });
+
+test("completing onboarding setup updates profileCompleted, bio, and hourlyRate", () => {
+  const user = db.users.all()[0];
+  const updated = db.users.update(user.id, {
+    profileCompleted: true,
+    bio: "Passionate Web3 & Smart Contract Auditor with 5 years EVM experience.",
+    hourlyRate: 75.0,
+  });
+
+  assert.equal(updated.profileCompleted, true);
+  assert.equal(updated.bio, "Passionate Web3 & Smart Contract Auditor with 5 years EVM experience.");
+  assert.equal(updated.hourlyRate, 75.0);
+});
+

@@ -121,10 +121,30 @@ export function createAgreement({
   if (!deadline || new Date(deadline).getTime() <= Date.now()) {
     throw new DomainError("Deadline must be a valid date in the future.");
   }
-  const freelancer = db.users.findById(freelancerId);
+  let freelancer = db.users.findById(freelancerId);
+  if (!freelancer && typeof freelancerId === "string" && freelancerId.startsWith("0x")) {
+    freelancer = db.users.findOne((u) => u.walletAddress?.toLowerCase() === freelancerId.toLowerCase());
+    if (!freelancer) {
+      freelancer = db.users.insert({
+        id: `user_freelancer_${freelancerId.slice(2, 10).toLowerCase()}`,
+        name: `Contributor (${freelancerId.slice(0, 6)}...${freelancerId.slice(-4)})`,
+        email: `${freelancerId.slice(2, 10).toLowerCase()}@contributor.eth`,
+        role: "FREELANCER",
+        avatar: "CT",
+        walletAddress: freelancerId,
+        walletBalance: 0.0,
+        title: "External Protocol Contributor",
+        skills: ["Solidity", "Smart Contracts"],
+        profileCompleted: true,
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+
   if (!freelancer || freelancer.role !== "FREELANCER") {
     throw new DomainError("Selected freelancer is not valid.");
   }
+
 
   const hours = Number(durationHours) || Math.max(1, Math.round((new Date(deadline).getTime() - Date.now()) / (1000 * 3600)));
   const calculatedRate = Number(ratePerSecond) || budget / (hours * 3600);
@@ -135,7 +155,7 @@ export function createAgreement({
     description: (description || "").trim(),
     category: category || "Freelance",
     clientId,
-    freelancerId,
+    freelancerId: freelancer.id,
     budget,
     totalDeposited: 0,
     totalWithdrawn: 0,

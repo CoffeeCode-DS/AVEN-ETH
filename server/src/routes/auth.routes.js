@@ -62,8 +62,10 @@ router.post("/register", (req, res) => {
     title: title?.trim() || (cleanRole === "CLIENT" ? "Engineering Lead & Client" : "Full-Stack Protocol Contributor"),
     skills: Array.isArray(skills) && skills.length ? skills : ["Solidity", "TypeScript", "React", "Node.js"],
     hourlyRate: cleanRole === "FREELANCER" ? 0.012 : undefined,
+    profileCompleted: false,
     createdAt: new Date().toISOString(),
   });
+
 
   const token = jwt.sign({ sub: newUser.id, role: newUser.role }, JWT_SECRET, { expiresIn: "12h" });
   res.json({ token, user: publicUser(newUser) });

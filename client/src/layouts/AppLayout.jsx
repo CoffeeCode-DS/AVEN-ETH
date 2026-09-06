@@ -1,9 +1,15 @@
 import { useEffect, useState } from "react";
 import Sidebar, { SidebarContent } from "../components/Sidebar.jsx";
 import Topbar from "../components/Topbar.jsx";
+import ProfileSetupModal from "../components/ProfileSetupModal.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function AppLayout({ title, subtitle, children }) {
+  const { user } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [setupDismissed, setSetupDismissed] = useState(false);
+
+  const showSetupModal = Boolean(user && user.profileCompleted === false && !setupDismissed);
 
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
@@ -38,6 +44,12 @@ export default function AppLayout({ title, subtitle, children }) {
         <Topbar title={title} subtitle={subtitle} onMenuClick={() => setDrawerOpen(true)} />
         <main className="flex-1 px-4 sm:px-8 py-8 max-w-7xl mx-auto w-full">{children}</main>
       </div>
+
+      <ProfileSetupModal
+        isOpen={showSetupModal}
+        onClose={() => setSetupDismissed(true)}
+      />
     </div>
   );
 }
+

@@ -35,6 +35,17 @@ router.patch("/profile", requireAuth, (req, res) => {
       .filter((s) => typeof s === "string" && s.trim())
       .map((s) => s.trim());
   }
+  if (req.body.hourlyRate !== undefined) {
+    const rate = Number(req.body.hourlyRate);
+    if (!isNaN(rate) && rate >= 0) patch.hourlyRate = rate;
+  }
+  if (typeof req.body.bio === "string") {
+    patch.bio = req.body.bio.trim();
+  }
+  if (typeof req.body.profileCompleted === "boolean") {
+    patch.profileCompleted = req.body.profileCompleted;
+  }
+
 
   const updated = db.users.update(req.user.id, patch);
   if (!updated) {

@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout.jsx";
 import { api } from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { useWeb3 } from "../context/Web3Context.jsx";
 import EscrowFlow from "../components/EscrowFlow.jsx";
 import Avatar from "../components/Avatar.jsx";
 import { formatEth, truncateAddress } from "../utils/format.js";
@@ -33,6 +34,7 @@ export default function CreateAgreement() {
   const navigate = useNavigate();
   const toast = useToast();
   const { user } = useAuth();
+  const { account, usdcBalance, isBaseSepolia } = useWeb3();
 
   const [step, setStep] = useState(0);
   const [freelancers, setFreelancers] = useState([]);
@@ -40,6 +42,13 @@ export default function CreateAgreement() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [errors, setErrors] = useState({});
+
+  // Contributor selection modes: "directory" | "direct"
+  const [contributorMode, setContributorMode] = useState("directory");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSkillFilter, setSelectedSkillFilter] = useState("All");
+  const [directWallet, setDirectWallet] = useState("");
+  const [directName, setDirectName] = useState("");
 
   const [form, setForm] = useState({
     title: "",
@@ -68,8 +77,11 @@ export default function CreateAgreement() {
 
     api
       .wallet()
-      .then((res) => setWalletBalance(res.balance))
-      .catch(() => {});
+      .then((res) => {
+        const bal = res.wallet?.availableBalance ?? res.balance ?? 15.0;
+        setWalletBalance(bal);
+      })
+      .catch(() => setWalletBalance(15.0));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function set(field, value) {
@@ -83,15 +95,64 @@ export default function CreateAgreement() {
     }
   }
 
+  // Skills for filter chips
+  const allSkills = useMemo(() => {
+    const s = new Set();
+    freelancers.forEach((f) => {
+      if (Array.isArray(f.skills)) f.skills.forEach((sk) => s.add(sk));
+    });
+    return ["All", ...Array.from(s)];
+  }, [freelancers]);
+
+  // Filtered contributors based on search and skill filter
+  const filteredFreelancers = useMemo(() => {
+    return freelancers.filter((f) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchesQuery =
+        !q ||
+        f.name.toLowerCase().includes(q) ||
+        (f.title && f.title.toLowerCase().includes(q)) ||
+        (Array.isArray(f.skills) && f.skills.some((sk) => sk.toLowerCase().includes(q))) ||
+        (f.walletAddress && f.walletAddress.toLowerCase().includes(q));
+      const matchesSkill =
+        selectedSkillFilter === "All" ||
+        (Array.isArray(f.skills) && f.skills.includes(selectedSkillFilter));
+      return matchesQuery && matchesSkill;
+    });
+  }, [freelancers, searchQuery, selectedSkillFilter]);
+
+  // Selected Contributor details
+  const selectedFreelancer = useMemo(() => {
+    if (contributorMode === "direct") {
+      const cleanAddr = directWallet.trim();
+      return {
+        id: cleanAddr || "direct_contributor",
+        name: directName.trim() || (cleanAddr ? `Contributor (${cleanAddr.slice(0, 6)}...${cleanAddr.slice(-4)})` : "Direct Contributor"),
+        walletAddress: cleanAddr || "0x0000000000000000000000000000000000000000",
+        rating: 5.0,
+        title: "External Protocol Contributor",
+        hourlyRate: 50,
+      };
+    }
+    return freelancers.find((f) => f.id === form.freelancerId);
+  }, [contributorMode, directWallet, directName, freelancers, form.freelancerId]);
+
   function validateStep(cur) {
     const next = {};
     if (cur === 0) {
       if (!form.title.trim()) next.title = "Agreement title is required.";
       if (!form.description.trim()) next.description = "Scope and deliverables specification is required.";
     } else if (cur === 1) {
-      if (!form.freelancerId) next.freelancerId = "Please select a recipient contributor.";
+      if (contributorMode === "direct") {
+        const addr = directWallet.trim();
+        if (!addr || !addr.startsWith("0x") || addr.length !== 42) {
+          next.freelancerId = "Please enter a valid 42-character Ethereum address (0x...).";
+        }
+      } else {
+        if (!form.freelancerId) next.freelancerId = "Please select a recipient contributor.";
+      }
       const n = Number(form.budget);
-      if (!form.budget || Number.isNaN(n) || n <= 0) next.budget = "Enter a valid escrow amount in ETH.";
+      if (!form.budget || Number.isNaN(n) || n <= 0) next.budget = "Enter a valid escrow amount (USDC).";
       if (!form.deadline) next.deadline = "Choose an agreement delivery deadline.";
       else if (new Date(form.deadline).getTime() <= Date.now()) next.deadline = "Deadline must be in the future.";
     }
@@ -116,11 +177,15 @@ export default function CreateAgreement() {
     setSubmitting(true);
     setSubmitError(null);
     try {
+      const targetFreelancerId = contributorMode === "direct"
+        ? directWallet.trim()
+        : form.freelancerId;
+
       const res = await api.createAgreement({
         title: form.title.trim(),
         description: form.description.trim(),
         category: form.category,
-        freelancerId: form.freelancerId,
+        freelancerId: targetFreelancerId,
         budget: Number(form.budget),
         deadline: new Date(form.deadline).toISOString(),
       });
@@ -133,13 +198,19 @@ export default function CreateAgreement() {
     }
   }
 
-  const selectedFreelancer = freelancers.find((f) => f.id === form.freelancerId);
   const budgetNum = Number(form.budget) || 0;
   const deadlineDays = form.deadline
     ? Math.max(1, Math.ceil((new Date(form.deadline).getTime() - Date.now()) / (1000 * 3600 * 24)))
     : 30;
   const computedRatePerSec = budgetNum > 0 ? budgetNum / (deadlineDays * 24 * 3600) : 0;
   const computedRatePerHr = computedRatePerSec * 3600;
+
+  // Active wallet mode and balance indicators
+  const isWeb3Active = Boolean(account && isBaseSepolia);
+  const currencySymbol = "USDC";
+  const displayWalletBalance = isWeb3Active
+    ? `$${usdcBalance} mUSDC`
+    : `$${(walletBalance ?? 15.0).toFixed(2)} USDC`;
 
   return (
     <AppLayout
@@ -220,33 +291,31 @@ export default function CreateAgreement() {
                           : "border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-[#141414] hover:border-slate-300 dark:hover:border-white/[0.14] text-slate-700 dark:text-slate-300"
                       }`}
                     >
-                      <p className="text-xs font-mono font-semibold text-slate-900 dark:text-white">{cat.label}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">{cat.desc}</p>
+                      <p className="text-xs font-semibold font-mono">{cat.label}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{cat.desc}</p>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Title */}
               <div>
                 <label className="field-label">Agreement Title</label>
                 <input
                   type="text"
-                  className={`input font-sans text-sm ${errors.title ? "input-error" : ""}`}
-                  placeholder="e.g. Core Protocol Architecture & Smart Escrow Implementation"
+                  className={`input font-sans ${errors.title ? "input-error" : ""}`}
+                  placeholder="e.g. Audit & Refactor Uniswap V4 Hook Contracts"
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
                 />
                 {errors.title && <p className="field-error">{errors.title}</p>}
               </div>
 
-              {/* Description & Deliverables */}
               <div>
-                <label className="field-label">Scope of Work &amp; Deliverables Checklist</label>
+                <label className="field-label">Scope, Deliverables &amp; Acceptance Criteria</label>
                 <textarea
-                  rows={6}
-                  className={`input resize-none font-sans text-xs leading-relaxed ${errors.description ? "input-error" : ""}`}
-                  placeholder="Describe scope, architectural requirements, milestones, and deliverables (e.g., contracts deployed, test coverage >90%, Git Merkle audit diffs)..."
+                  rows={5}
+                  className={`input font-sans resize-none ${errors.description ? "input-error" : ""}`}
+                  placeholder="Detail the technical milestones, GitHub repo links, testing standards, and proof of work required for 100% escrow release..."
                   value={form.description}
                   onChange={(e) => set("description", e.target.value)}
                 />
@@ -261,50 +330,194 @@ export default function CreateAgreement() {
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Contributor &amp; Escrow Economics</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-sans">
-                  Assign the recipient developer, lock the escrow vault deposit, and set the stream rate.
+                  Assign the recipient developer, lock the escrow vault deposit, and set the continuous micro-payment rate.
                 </p>
               </div>
 
-              {/* Contributor Selection */}
-              <div>
-                <label className="field-label">Select Contributor / Recipient Worker</label>
-                {loadingFreelancers ? (
+              {/* Contributor Selection with Tabs & Filters */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="field-label !mb-0">Recipient Contributor</label>
+
+                  {/* Mode switcher tabs */}
+                  <div className="flex rounded-lg bg-slate-100 dark:bg-white/[0.05] p-0.5 text-[11px] font-mono border border-slate-200 dark:border-white/[0.08]">
+                    <button
+                      type="button"
+                      onClick={() => setContributorMode("directory")}
+                      className={`px-3 py-1 rounded-md transition-all ${
+                        contributorMode === "directory"
+                          ? "bg-white dark:bg-[#1C1C1C] text-slate-900 dark:text-white shadow-sm font-semibold"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      Directory ({freelancers.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContributorMode("direct")}
+                      className={`px-3 py-1 rounded-md transition-all ${
+                        contributorMode === "direct"
+                          ? "bg-white dark:bg-[#1C1C1C] text-slate-900 dark:text-white shadow-sm font-semibold"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      Direct Wallet (0x...)
+                    </button>
+                  </div>
+                </div>
+
+                {contributorMode === "directory" ? (
                   <div className="space-y-3">
-                    <div className="skeleton h-20 w-full rounded-xl" />
-                    <div className="skeleton h-20 w-full rounded-xl" />
+                    {/* Search Bar & Skill Filter */}
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"
+                        >
+                          <circle cx="11" cy="11" r="8" />
+                          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          placeholder="Search by name, title, skill (Solidity, React), or address..."
+                          className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-xs font-sans text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-[#6366F1]"
+                        />
+                        {searchQuery && (
+                          <button
+                            type="button"
+                            onClick={() => setSearchQuery("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filter Chips */}
+                      {allSkills.length > 1 && (
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-mono scrollbar-none">
+                          {allSkills.slice(0, 8).map((sk) => (
+                            <button
+                              key={sk}
+                              type="button"
+                              onClick={() => setSelectedSkillFilter(sk)}
+                              className={`px-2.5 py-1 rounded-lg shrink-0 transition-all ${
+                                selectedSkillFilter === sk
+                                  ? "bg-[#6366F1] text-white font-semibold shadow-sm"
+                                  : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06]"
+                              }`}
+                            >
+                              {sk}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contributor List */}
+                    {loadingFreelancers ? (
+                      <div className="space-y-3">
+                        <div className="skeleton h-20 w-full rounded-xl" />
+                        <div className="skeleton h-20 w-full rounded-xl" />
+                      </div>
+                    ) : filteredFreelancers.length === 0 ? (
+                      <div className="p-6 text-center rounded-2xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] space-y-2">
+                        <p className="text-xs text-slate-500 font-mono">
+                          No contributors found matching "{searchQuery || selectedSkillFilter}".
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setContributorMode("direct")}
+                          className="text-xs font-mono text-[#6366F1] dark:text-[#818CF8] hover:underline font-semibold"
+                        >
+                          → Enter custom wallet address directly
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
+                        {filteredFreelancers.map((f) => (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => set("freelancerId", f.id)}
+                            className={`w-full text-left rounded-xl border p-3.5 transition-all flex items-center justify-between gap-3 ${
+                              form.freelancerId === f.id
+                                ? "border-[#6366F1] bg-indigo-50 dark:bg-[#6366F1]/10 shadow-sm ring-1 ring-[#6366F1]"
+                                : "border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-[#141414] hover:border-slate-300 dark:hover:border-white/[0.14]"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <Avatar user={f} size="sm" />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-semibold text-slate-900 dark:text-white text-xs">{f.name}</p>
+                                  <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-medium">
+                                    Rating {f.rating || 5}/5
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">{f.title}</p>
+                                {f.skills && f.skills.length > 0 && (
+                                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                                    {f.skills.slice(0, 3).map((sk) => (
+                                      <span key={sk} className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-200 dark:bg-white/[0.08] text-slate-600 dark:text-slate-300">
+                                        {sk}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="text-right font-mono shrink-0">
+                              <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                ${Number(f.hourlyRate || 50).toFixed(0)} USDC/hr
+                              </p>
+                              <p className="text-[10px] text-slate-500">{f.completedProjects || 0} contracts</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-[260px] overflow-y-auto pr-1">
-                    {freelancers.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => set("freelancerId", f.id)}
-                        className={`w-full text-left rounded-xl border p-3.5 transition-colors flex items-center justify-between gap-3 ${
-                          form.freelancerId === f.id
-                            ? "border-[#6366F1] bg-indigo-50 dark:bg-[#6366F1]/10 shadow-sm"
-                            : "border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-[#141414] hover:border-slate-300 dark:hover:border-white/[0.14]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <Avatar user={f} size="sm" />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-slate-900 dark:text-white text-xs">{f.name}</p>
-                              <span className="text-[10px] font-mono text-amber-600 dark:text-amber-400 font-medium">
-                                Rating {f.rating}/5
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">{f.title}</p>
-                          </div>
-                        </div>
-
-                        <div className="text-right font-mono shrink-0">
-                          <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{formatEth(f.hourlyRate)}/hr</p>
-                          <p className="text-[10px] text-slate-500">{f.completedProjects} contracts</p>
-                        </div>
-                      </button>
-                    ))}
+                  /* Direct Wallet Input Mode */
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] space-y-3 font-mono text-xs">
+                    <div>
+                      <label className="block text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        Contributor Ethereum Wallet Address (0x...)
+                      </label>
+                      <input
+                        type="text"
+                        value={directWallet}
+                        onChange={(e) => setDirectWallet(e.target.value)}
+                        placeholder="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.1] text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#6366F1]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+                        Contributor Name / Label (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={directName}
+                        onChange={(e) => setDirectName(e.target.value)}
+                        placeholder="e.g. Satoshi Nakamoto or External Protocol Auditor"
+                        className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#0A0A0A] border border-slate-200 dark:border-white/[0.1] text-slate-900 dark:text-white font-sans focus:outline-none focus:border-[#6366F1]"
+                      />
+                    </div>
+                    {directWallet && (
+                      <div className="flex items-center gap-2 text-[11px] text-emerald-600 dark:text-emerald-400 pt-1">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span>Stream will be routed directly to {truncateAddress(directWallet)}</span>
+                      </div>
+                    )}
                   </div>
                 )}
                 {errors.freelancerId && <p className="field-error">{errors.freelancerId}</p>}
@@ -313,26 +526,36 @@ export default function CreateAgreement() {
               {/* Escrow Deposit & Deadline in 2 Columns */}
               <div className="grid sm:grid-cols-2 gap-5 pt-2">
                 <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="field-label !mb-0">Escrow Deposit (ETH)</label>
-                    {walletBalance !== null && (
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                        Wallet: <strong className="text-emerald-600 dark:text-emerald-400">{formatEth(walletBalance)}</strong>
-                      </span>
-                    )}
+                  <div className="flex justify-between items-center mb-1 flex-wrap gap-1">
+                    <label className="field-label !mb-0">Escrow Deposit ({currencySymbol})</label>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1.5">
+                      <span>Wallet:</span>
+                      <strong className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        {displayWalletBalance}
+                      </strong>
+                      {isWeb3Active ? (
+                        <span className="text-[9px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-1.5 py-0.5 rounded font-bold">
+                          BASE SEPOLIA
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-mono text-slate-500 bg-slate-100 dark:bg-white/[0.06] px-1.5 py-0.5 rounded">
+                          LOCAL SIM
+                        </span>
+                      )}
+                    </span>
                   </div>
                   <div className="relative">
                     <input
                       type="number"
-                      step="0.0001"
+                      step="1"
                       min="0"
                       className={`input font-mono ${errors.budget ? "input-error" : ""}`}
-                      placeholder="0.5000"
+                      placeholder="500"
                       value={form.budget}
                       onChange={(e) => set("budget", e.target.value)}
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-500 dark:text-slate-400 font-bold">
-                      ETH
+                      {currencySymbol}
                     </span>
                   </div>
                   {errors.budget && <p className="field-error">{errors.budget}</p>}
@@ -360,7 +583,9 @@ export default function CreateAgreement() {
                   </div>
                   <div className="flex items-center justify-between text-slate-600 dark:text-slate-400">
                     <span>Continuous Flow Rate:</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">{computedRatePerSec.toFixed(8)} ETH/sec ({formatEth(computedRatePerHr)}/hr)</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                      ${computedRatePerSec.toFixed(6)} {currencySymbol}/sec (${computedRatePerHr.toFixed(2)}/hr)
+                    </span>
                   </div>
                 </div>
               )}
@@ -384,7 +609,7 @@ export default function CreateAgreement() {
                   fromName={user?.name || "Client"}
                   toLabel={selectedFreelancer?.avatar || "DV"}
                   toName={selectedFreelancer?.name || "Contributor"}
-                  amount={formatEth(budgetNum)}
+                  amount={`$${budgetNum.toLocaleString("en-US", { minimumFractionDigits: 2 })} ${currencySymbol}`}
                   active
                 />
               </div>
@@ -401,15 +626,21 @@ export default function CreateAgreement() {
                 </div>
                 <div className="flex justify-between p-3">
                   <span className="text-slate-500 dark:text-slate-400">Contributor:</span>
-                  <span className="text-slate-900 dark:text-white font-medium">{selectedFreelancer?.name} ({truncateAddress(selectedFreelancer?.walletAddress)})</span>
+                  <span className="text-slate-900 dark:text-white font-medium">
+                    {selectedFreelancer?.name} ({truncateAddress(selectedFreelancer?.walletAddress)})
+                  </span>
                 </div>
                 <div className="flex justify-between p-3">
                   <span className="text-slate-500 dark:text-slate-400">Locked Escrow Vault:</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">{formatEth(budgetNum)}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                    ${budgetNum.toLocaleString("en-US", { minimumFractionDigits: 2 })} {currencySymbol}
+                  </span>
                 </div>
                 <div className="flex justify-between p-3">
                   <span className="text-slate-500 dark:text-slate-400">Settlement Rate:</span>
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">{formatEth(computedRatePerHr)}/hr</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-medium">
+                    ${computedRatePerHr.toFixed(2)} {currencySymbol}/hr
+                  </span>
                 </div>
                 <div className="flex justify-between p-3">
                   <span className="text-slate-500 dark:text-slate-400">Target Deadline:</span>
@@ -456,7 +687,7 @@ export default function CreateAgreement() {
             {step < STEPS.length - 1 ? (
               <button
                 type="button"
-                className="h-10 px-6 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-medium uppercase tracking-wider transition-all shadow-md shadow-indigo-500/25"
+                className="h-10 px-6 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white font-medium uppercase tracking-wider transition-all shadow-md shadow-indigo-500/20 active:scale-[0.98]"
                 onClick={goNext}
               >
                 Proceed to {STEPS[step + 1].title} &rarr;
@@ -464,12 +695,11 @@ export default function CreateAgreement() {
             ) : (
               <button
                 type="button"
-                className="h-10 px-6 rounded-xl bg-[#6366F1] hover:bg-[#5558E6] text-white font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-500/30 flex items-center gap-2"
+                className="h-10 px-7 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium uppercase tracking-wider transition-all shadow-md shadow-emerald-500/20 active:scale-[0.98] disabled:opacity-50"
                 onClick={handleCreate}
                 disabled={submitting}
               >
-                {submitting && <span className="h-3.5 w-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin mr-2" />}
-                {submitting ? "Deploying Covenant..." : "Deploy Smart Agreement"}
+                {submitting ? "Broadcasting Contract..." : "Deploy Escrow Stream &rarr;"}
               </button>
             )}
           </div>
@@ -508,7 +738,9 @@ export default function CreateAgreement() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 text-[11px]">Escrow Deposit:</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">{formatEth(budgetNum)}</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  ${budgetNum.toLocaleString("en-US", { minimumFractionDigits: 2 })} {currencySymbol}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 text-[11px]">Deadline:</span>
@@ -519,7 +751,9 @@ export default function CreateAgreement() {
             <div className="pt-3 border-t border-slate-200 dark:border-white/[0.06]">
               <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>EVM Localnet Chain ID: 31337</span>
+                <span>
+                  {isWeb3Active ? "Base Sepolia Chain ID: 84532" : "EVM Localnet Chain ID: 31337"}
+                </span>
               </div>
             </div>
           </div>

@@ -9,6 +9,7 @@ export const users = [
     walletAddress: "0x9F2c8A49d4901bDeE27c94726eF28e19B864B7e",
     walletBalance: 25.0,
     title: "Project Lead & Protocol Architect",
+    profileCompleted: true,
     createdAt: new Date().toISOString(),
   },
   {
@@ -23,6 +24,7 @@ export const users = [
     title: "Full-Stack Engineer & Smart Contract Specialist",
     skills: ["Solidity", "React", "Node.js", "EVM", "UI Systems"],
     hourlyRate: 0.015,
+    profileCompleted: true,
     createdAt: new Date().toISOString(),
   },
   {
@@ -37,8 +39,10 @@ export const users = [
     title: "UI/UX Design & Frontend Specialist",
     skills: ["React", "Design Systems", "Figma", "UI/UX"],
     hourlyRate: 0.011,
+    profileCompleted: true,
     createdAt: new Date().toISOString(),
   },
+
 ];
 
 export const agreements = [];
