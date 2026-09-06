@@ -8,6 +8,7 @@ import Avatar, {
 import { api } from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
+import { truncateAddress } from "../utils/format.js";
 
 const POPULAR_SKILLS = [
   "Solidity",
@@ -177,230 +178,358 @@ export default function ProfileSetupModal({ isOpen, onClose }) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleSkip} title="Let's set up your profile first!" size="lg">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Banner */}
-        <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-[#6366F1]/10 border border-indigo-200 dark:border-indigo-500/25 flex items-start gap-3.5">
-          <span className="h-2 w-2 rounded-full bg-[#6366F1] animate-pulse mt-1.5 shrink-0" />
-          <div className="min-w-0 flex-1 text-xs">
-            <p className="font-semibold text-slate-900 dark:text-white">
-              Welcome to Sidekick ({user.role})!
-            </p>
-            <p className="text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
-              Complete your cryptographic identity so counterparties can discover your skills, verify your work on-chain, and stream payments.
-            </p>
-          </div>
-        </div>
+    <Modal isOpen={isOpen} onClose={handleSkip} size="2xl" noPadding={true}>
+      <div className="grid lg:grid-cols-12 min-h-[560px] max-h-[88vh] text-slate-900 dark:text-slate-100 overflow-hidden">
+        {/* Hidden File Input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
 
-        {/* 1. Avatar / Photo Selector */}
-        <div className="space-y-3">
-          <label className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-            1. Profile Photo &amp; Web3 Avatar
-          </label>
-          <div className="flex flex-wrap items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08]">
-            <Avatar
-              user={user}
-              avatarUrl={avatar}
-              name={name}
-              size="xl"
-              rounded="rounded-2xl"
-              showBorder
-              className="shadow-md shadow-indigo-500/20 shrink-0"
-            />
-            <div className="space-y-2 flex-1 min-w-[200px]">
-              <div className="flex items-center gap-2 flex-wrap">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
+        {/* ========================================================================= */}
+        {/* LEFT COLUMN: LIVE IDENTITY PREVIEW & AVATAR PICKER (~40% Width)          */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-5 bg-slate-50/90 dark:bg-[#07080C] border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-white/[0.08] p-6 sm:p-7 flex flex-col justify-between overflow-y-auto">
+          <div className="space-y-4">
+            {/* Header Badge */}
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] text-[10px] font-mono uppercase tracking-wider border border-indigo-200 dark:border-indigo-500/30">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#6366F1] animate-pulse" />
+                Protocol Identity
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                Live Preview
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Real-time card as seen by counterparties on-chain.
+              </p>
+            </div>
+
+            {/* Live Identity Card */}
+            <div className="relative rounded-2xl bg-white dark:bg-[#0E1117] border border-slate-200 dark:border-white/[0.08] p-5 shadow-lg shadow-black/5 dark:shadow-2xl space-y-4 overflow-hidden">
+              <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
+
+              {/* Avatar + Main Details */}
+              <div className="flex items-center gap-3.5">
+                <div
+                  className="relative group cursor-pointer shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to upload custom photo"
+                >
+                  <Avatar
+                    user={user}
+                    avatarUrl={avatar}
+                    name={name}
+                    size="lg"
+                    rounded="rounded-2xl"
+                    showBorder
+                    className="shadow-md shadow-indigo-500/15 ring-2 ring-indigo-500/20"
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-150 flex flex-col items-center justify-center text-white text-[9px] font-mono">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 mb-0.5">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <span>Edit</span>
+                  </div>
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                      {name.trim() || "Anonymous Contributor"}
+                    </p>
+                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-500/20 text-[#6366F1] dark:text-[#818CF8] border border-indigo-200 dark:border-indigo-500/30">
+                      {user.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono truncate mt-0.5">
+                    {title.trim() || (isClient ? "Engineering Client" : "Smart Contract Engineer")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Card Meta Stats */}
+              <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 dark:border-white/[0.06] text-xs font-mono">
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-white/[0.03]">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">
+                    {isClient ? "Protocol Role" : "Hourly Rate"}
+                  </p>
+                  <p className="font-semibold text-slate-900 dark:text-white mt-0.5">
+                    {isClient ? "Disbursing" : `${hourlyRate || "0"} USDC/hr`}
+                  </p>
+                </div>
+                <div className="p-2 rounded-xl bg-slate-50 dark:bg-white/[0.03]">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wide">Wallet</p>
+                  <p className="font-semibold text-slate-700 dark:text-slate-300 mt-0.5 truncate">
+                    {truncateAddress(user.walletAddress)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Skills Tags Preview */}
+              {!isClient && skills.length > 0 && (
+                <div className="pt-1">
+                  <div className="flex flex-wrap gap-1">
+                    {skills.slice(0, 4).map((s) => (
+                      <span
+                        key={s}
+                        className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-[10px] font-mono text-slate-600 dark:text-slate-300"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                    {skills.length > 4 && (
+                      <span className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-[10px] font-mono text-slate-400">
+                        +{skills.length - 4}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Avatar Selection & Presets */}
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-500 dark:text-slate-400">Avatar Selection:</span>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#1E1E1E] hover:bg-slate-100 dark:hover:bg-[#282828] text-slate-800 dark:text-slate-200 text-xs font-mono font-medium border border-slate-200 dark:border-white/[0.08] transition-colors"
+                  className="text-[11px] text-[#6366F1] dark:text-[#818CF8] hover:underline font-medium"
                 >
-                  Browse Device Photo
+                  Upload Device Photo
                 </button>
-                <span className="text-[11px] text-slate-400 font-mono">or pick a Web3 preset:</span>
               </div>
-
-              {/* Web3 Identicon Presets */}
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {web3Presets.map((preset) => (
                   <button
                     key={preset.id}
                     type="button"
                     onClick={() => setAvatar(preset.url)}
-                    className={`p-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
+                    className={`p-1.5 rounded-xl border text-center transition-all flex items-center justify-center gap-1.5 ${
                       avatar === preset.url
                         ? "border-[#6366F1] bg-indigo-50 dark:bg-[#6366F1]/20 ring-1 ring-[#6366F1]"
-                        : "border-slate-200 dark:border-white/[0.08] hover:border-slate-300 bg-white dark:bg-[#1A1A1A]"
+                        : "border-slate-200 dark:border-white/[0.08] hover:border-slate-300 bg-white dark:bg-[#0E1117]"
                     }`}
                   >
-                    <img src={preset.url} alt={preset.label} className="h-6 w-6 rounded-lg bg-[#6366F1]" />
+                    <img src={preset.url} alt={preset.label} className="h-5 w-5 rounded-md bg-[#6366F1]" />
                     <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300">{preset.label}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
+
+          <p className="text-[11px] text-slate-400 font-mono mt-4 border-t border-slate-200/80 dark:border-white/[0.06] pt-3 leading-relaxed">
+            Non-custodial identity anchored to Ethereum address {truncateAddress(user.walletAddress)}.
+          </p>
         </div>
 
-        {/* 2. Name & Title */}
-        <div className="grid sm:grid-cols-2 gap-4">
+        {/* ========================================================================= */}
+        {/* RIGHT COLUMN: SPACIOUS MINIMALIST SETUP FORM (~60% Width)                 */}
+        {/* ========================================================================= */}
+        <div className="lg:col-span-7 bg-white dark:bg-[#0A0A0A] p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
           <div>
-            <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5">
-              Full Name / Handle
-            </label>
-            <input
-              type="text"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Alex Vance"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5">
-              Professional Role / Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={isClient ? "Engineering Lead & Client" : "Senior Smart Contract Engineer"}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1]"
-            />
-          </div>
-        </div>
-
-        {/* Quick Title Suggestions */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-mono text-slate-400">Suggestions:</span>
-          {(SUGGESTED_TITLES[user.role] || []).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTitle(t)}
-              className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-300 transition-colors"
-            >
-              + {t}
-            </button>
-          ))}
-        </div>
-
-        {/* 3. Skills (Freelancers) */}
-        {!isClient && (
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                2. Engineering Skills &amp; Competencies
-              </label>
-              <span className="text-[11px] font-mono text-slate-400">{skills.length} selected</span>
-            </div>
-
-            {/* Popular Chips */}
-            <div className="flex flex-wrap gap-1.5">
-              {POPULAR_SKILLS.map((sk) => {
-                const selected = skills.includes(sk);
-                return (
-                  <button
-                    key={sk}
-                    type="button"
-                    onClick={() => toggleSkill(sk)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
-                      selected
-                        ? "bg-[#6366F1] text-white shadow-sm"
-                        : "bg-slate-100 dark:bg-white/[0.05] text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.1] border border-slate-200 dark:border-white/[0.06]"
-                    }`}
-                  >
-                    {selected ? "✓ " : "+ "}
-                    {sk}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Custom Skill Input */}
-            <div className="flex gap-2 pt-1">
-              <input
-                type="text"
-                value={newSkillInput}
-                onChange={(e) => setNewSkillInput(e.target.value)}
-                placeholder="Add other skill (e.g. Zero-Knowledge, GraphQL)..."
-                className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
-              />
+            {/* Top Form Header */}
+            <div className="flex items-start justify-between pb-4 mb-5 border-b border-slate-200 dark:border-white/[0.06]">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                  Profile Setup
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Configure your cryptographic presence for escrow agreements &amp; streams.
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={handleAddCustomSkill}
-                className="px-3 py-1.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-xs font-mono text-slate-700 dark:text-slate-300"
+                onClick={handleSkip}
+                className="text-xs font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors pt-1"
               >
-                Add
+                Skip &rarr;
               </button>
             </div>
-          </div>
-        )}
 
-        {/* 4. Hourly Rate (Freelancer) / Bio */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          {!isClient && (
-            <div>
-              <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5">
-                Target Hourly Rate (USDC / hr)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  placeholder="50"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-[#6366F1]"
-                />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400 font-bold">
-                  USDC/hr
-                </span>
+            <form onSubmit={handleSubmit} id="profile-setup-form" className="space-y-4">
+              {/* Row 1: Name & Professional Title */}
+              <div className="grid sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
+                    Full Name / Alias <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g. Alex Vance"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1] transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
+                    Professional Title
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder={isClient ? "Engineering Lead & Client" : "Senior Smart Contract Engineer"}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1] transition-colors"
+                  />
+                </div>
               </div>
-            </div>
-          )}
 
-          <div className={isClient ? "sm:col-span-2" : ""}>
-            <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5">
-              Short Bio / About (Optional)
-            </label>
-            <input
-              type="text"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Brief summary or link to GitHub / Twitter..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1]"
-            />
+              {/* Title Suggestions Pills */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] font-mono text-slate-400">Suggestions:</span>
+                {(SUGGESTED_TITLES[user.role] || []).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTitle(t)}
+                    className={`text-[10px] font-mono px-2 py-0.5 rounded-md transition-colors ${
+                      title === t
+                        ? "bg-[#6366F1]/15 text-[#6366F1] dark:text-[#818CF8] border border-[#6366F1]/30 font-medium"
+                        : "bg-slate-100 dark:bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-300"
+                    }`}
+                  >
+                    + {t}
+                  </button>
+                ))}
+              </div>
+
+              {/* Row 2: Hourly Rate & Bio */}
+              <div className="grid sm:grid-cols-2 gap-3.5">
+                {!isClient && (
+                  <div>
+                    <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
+                      Target Rate (USDC / hr)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={hourlyRate}
+                        onChange={(e) => setHourlyRate(e.target.value)}
+                        placeholder="50"
+                        className="w-full pl-3.5 pr-24 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-mono focus:outline-none focus:border-[#6366F1] transition-colors"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-mono text-slate-400 font-medium pointer-events-none">
+                        USDC / hr
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className={isClient ? "sm:col-span-2" : ""}>
+                  <label className="block text-xs font-mono text-slate-700 dark:text-slate-300 mb-1.5 font-medium">
+                    Short Bio / Statement
+                  </label>
+                  <input
+                    type="text"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder={isClient ? "e.g. Protocol founder looking for EVM talent" : "e.g. EVM smart contracts, DeFi vaults & security"}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white text-xs font-sans focus:outline-none focus:border-[#6366F1] transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Row 3: Skills Selection (Freelancers) */}
+              {!isClient && (
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-mono font-medium text-slate-700 dark:text-slate-300">
+                      Core Technical Skills
+                    </label>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      {skills.length} selected
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {POPULAR_SKILLS.map((sk) => {
+                      const selected = skills.includes(sk);
+                      return (
+                        <button
+                          key={sk}
+                          type="button"
+                          onClick={() => toggleSkill(sk)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-all ${
+                            selected
+                              ? "bg-[#6366F1] text-white shadow-sm font-medium"
+                              : "bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06]"
+                          }`}
+                        >
+                          {selected ? "✓ " : "+ "}
+                          {sk}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Inline Custom Skill Input */}
+                  <div className="flex gap-2 pt-1">
+                    <input
+                      type="text"
+                      value={newSkillInput}
+                      onChange={(e) => setNewSkillInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddCustomSkill(e);
+                        }
+                      }}
+                      placeholder="Add custom skill (e.g. Cairo, Subgraph)..."
+                      className="flex-1 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#141414] border border-slate-200 dark:border-white/[0.08] text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:border-[#6366F1]"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomSkill}
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/[0.1] text-xs font-mono font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] transition-colors"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+            </form>
+          </div>
+
+          {/* Bottom Action Footer */}
+          <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between mt-5">
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="text-xs font-mono text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors"
+            >
+              I'll do this later
+            </button>
+
+            <button
+              type="submit"
+              form="profile-setup-form"
+              disabled={saving}
+              className="px-6 py-2.5 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white font-medium text-xs font-mono shadow-md shadow-indigo-500/25 transition-all disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? (
+                <>
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                  <span>Saving Profile...</span>
+                </>
+              ) : (
+                <span>Save &amp; Complete Setup &rarr;</span>
+              )}
+            </button>
           </div>
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-white/[0.06] font-mono text-xs">
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 underline transition-colors"
-          >
-            I'll do this later
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2.5 rounded-xl bg-[#6366F1] hover:bg-[#4F46E5] text-white font-medium shadow-md shadow-indigo-500/25 transition-all disabled:opacity-50"
-          >
-            {saving ? "Saving Profile..." : "Save & Complete Setup"}
-          </button>
-        </div>
-      </form>
+      </div>
     </Modal>
   );
 }
